@@ -1,36 +1,66 @@
 <?php
+namespace co0lc0der\QueryBuilder;
+
+use PDO;
 
 class QueryBuilder
 {
 	private const OPERATORS = ['=', '>', '<', '>=', '<=', '!='];
 	private const LOGICS = ['AND', 'OR'];
-	private $pdo, $query, $error = false, $results, $count;
+	private $pdo;
+	private $query;
+	private $error = false;
+	private $results = [];
+	private $count = 0;
 
+	/**
+	 * @param PDO $pdo
+	 */
 	public function __construct(PDO $pdo) {
 		$this->pdo = $pdo;
 	}
 
-	public function error()	{
+	/**
+	 * @return bool
+	 */
+	public function getError(): bool	{
 		return $this->error;
 	}
 
-	public function results()	{
+	/**
+	 * @return array
+	 */
+	public function getResults(): array {
 		return $this->results;
 	}
 
-	public function count()	{
+	/**
+	 * @return int
+	 */
+	public function getCount(): int {
 		return $this->count;
 	}
 
-	public function first() {
-		return $this->results()[0];
+	/**
+	 * @return string
+	 */
+	public function getFirst(): string {
+		return $this->getResults()[0];
 	}
 
-	public function last() {
-		return end($this->results());
+	/**
+	 * @return false|mixed
+	 */
+	public function getLast() {
+		return end($this->getResults());
 	}
 
-	private function prepareAliases($list, $asArray = false) {
+	/**
+	 * @param array $list
+	 * @param bool $asArray
+	 * @return array|false|string
+	 */
+	private function prepareAliases(array $list, bool $asArray = false) {
 		if (empty($list)) return false;
 
 		$sql = [];
@@ -41,7 +71,11 @@ class QueryBuilder
 		return $asArray ? $sql : implode(', ', $sql);
 	}
 
-	private function prepareCondition($where) {
+	/**
+	 * @param array $where
+	 * @return array|false
+	 */
+	private function prepareCondition(array $where) {
 		if (empty($where)) return false;
 
 		$result = [];
@@ -70,7 +104,12 @@ class QueryBuilder
 		return $result;
 	}
 
-	public function query($sql, $params = []) {
+	/**
+	 * @param string $sql
+	 * @param array $params
+	 * @return $this
+	 */
+	public function query(string $sql, array $params = []): QueryBuilder {
 		$this->error = false;
 		$this->query = $this->pdo->prepare($sql);
 
@@ -92,41 +131,79 @@ class QueryBuilder
 		return $this;
 	}
 
-	public function get($table, $where = [], $addition = '') {
+	/**
+	 * @param string $table
+	 * @param array $where
+	 * @param string $addition
+	 * @return $this|false
+	 */
+	public function get(string $table, array $where = [], string $addition = '') {
 		return $this->action('SELECT *', $table, $where, $addition);
 	}
 
-	public function getAll($table, $addition = '') {
-		return $this->action('SELECT *', $table, $addition);
+	/**
+	 * @param string $table
+	 * @param string $addition
+	 * @return $this|false
+	 */
+	public function getAll(string $table, string $addition = '') {
+		return $this->action('SELECT *', $table, [], $addition);
 	}
 
-	public function getFields($table, $fields, $where = [], $addition = '') {
+	/**
+	 * @param string $table
+	 * @param array $fields
+	 * @param array $where
+	 * @param string $addition
+	 * @return $this|false
+	 */
+	public function getFields(string $table, array $fields, array $where = [], string $addition = '') {
 		if (is_array($fields)) {
 			return $this->action("SELECT {$this->prepareAliases($fields)}", $table, $where, $addition);
 		} else if (is_string($fields)) {
 			return $this->action("SELECT {$fields}", $table, $where, $addition);
 		}
 
-		return null;
+		return false;
 	}
 
+	/**
+	 * @param $table
+	 * @param array $where
+	 * @param string $addition
+	 * @return $this|false
+	 */
 	public function delete($table, $where = [], $addition = '') {
 		return $this->action('DELETE', $table, $where, $addition);
 	}
 
-	public function action($action, $table, $where = [], $addition = '') {
+	/**
+	 * @param string $action
+	 * @param string $table
+	 * @param array $where
+	 * @param string $addition
+	 * @return $this|false
+	 */
+	public function action(string $action, string $table, array $where = [], string $addition = '') {
 		if (empty($where)) {
 			$sql = "{$action} FROM `{$table}` {$addition}";
-			if (!$this->query($sql)->error()) return $this;
+			if (!$this->query($sql)->getError()) return $this;
 		}
 
 		$condition = $this->prepareCondition($where);
 
 		$sql = "{$action} FROM `{$table}` WHERE {$condition['sql']} {$addition}";
-		if(!$this->query($sql, $condition['values'])->error()) return $this;
+		if(!$this->query($sql, $condition['values'])->getError()) return $this;
+
+		return false;
 	}
 
-	public function insert($table, $fields = []) {
+	/**
+	 * @param string $table
+	 * @param array $fields
+	 * @return bool
+	 */
+	public function insert(string $table, array $fields = []): bool {
 		$values = '';
 		foreach ($fields as $field) {
 			$values .= "?,";
@@ -134,12 +211,19 @@ class QueryBuilder
 		$val = rtrim($values, ',');
 
 		$sql = "INSERT INTO `{$table}` (" . '`' . implode('`, `', array_keys($fields)) . '`' . ") VALUES ({$val})";
-		if ($this->query($sql, $fields)->error()) return false;
+		if ($this->query($sql, $fields)->getError()) return false;
 
 		return true;
 	}
 
-	public function update($table, $id, $fields = [], $addition = '') {
+	/**
+	 * @param string $table
+	 * @param int $id
+	 * @param array $fields
+	 * @param string $addition
+	 * @return bool
+	 */
+	public function update(string $table, int $id, array $fields = [], string $addition = ''): bool {
 		$set = '';
 		foreach ($fields as $key => $field) {
 			$set .= "`{$key}` = ?,"; // username = ?, password = ?,
@@ -147,12 +231,18 @@ class QueryBuilder
 		$set = rtrim($set, ','); // username = ?, password = ?
 
 		$sql = "UPDATE `{$table}` SET {$set} WHERE `id` = {$id} {$addition}";
-		if ($this->query($sql, $fields)->error()) return false;
+		if ($this->query($sql, $fields)->getError()) return false;
 
 		return true;
 	}
 
-	public function join($tables, $fields, $on) {
+	/**
+	 * @param array $tables
+	 * @param array $fields
+	 * @param array $on
+	 * @return $this|false|void
+	 */
+	public function join(array $tables, array $fields, array $on) {
 		if (count($tables) !== 2 || count($on) !== 3) return false;
 
 		$field1 = $on[0];
@@ -163,6 +253,6 @@ class QueryBuilder
 
 		$sql_tables = $this->prepareAliases($tables, true);
 		$sql = "SELECT {$this->prepareAliases($fields)} FROM {$sql_tables[0]} INNER JOIN {$sql_tables[1]} ON {$field1} {$operator} {$field2}";
-		if(!$this->query($sql)->error()) return $this;
+		if(!$this->query($sql)->getError()) return $this;
 	}
 }

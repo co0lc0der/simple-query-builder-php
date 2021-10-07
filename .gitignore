@@ -1,3 +1,4 @@
 .idea
 users.sqlite3
-
+composer.lock
+vendor/
