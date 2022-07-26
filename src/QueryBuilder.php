@@ -225,6 +225,23 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param array|string $where
+	 * @param string $addition
+	 * @return $this
+	 */
+	public function where($where, string $addition = ''): QueryBuilder
+	{
+		$conditions = $this->prepareConditions($where);
+		if (!empty($addition)) {
+			$this->sql .= " WHERE {$conditions['sql']} {$addition}";
+		} else {
+			$this->sql .= " WHERE {$conditions['sql']}";
+		}
+		$this->params[] = $conditions['values'];
+		return $this;
+	}
+
+	/**
 	 * @param int $limit
 	 * @return $this
 	 */
