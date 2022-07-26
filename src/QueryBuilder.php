@@ -3,6 +3,9 @@ namespace co0lc0der\QueryBuilder;
 
 use PDO;
 
+/**
+ * class QueryBuilder
+ */
 class QueryBuilder
 {
 	private const OPERATORS = ['=', '>', '<', '>=', '<=', '!=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
@@ -74,6 +77,19 @@ class QueryBuilder
 	 */
 	public function getLast() {
 		return end($this->getResults());
+	}
+
+	/**
+	 * @return void
+	 */
+	public function reset()
+	{
+	  $this->sql = '';
+	  $this->params = [];
+	  $this->query = null;
+	  $this->results = [];
+	  $this->count = -1;
+	  $this->error = false;
 	}
 
 	/**
