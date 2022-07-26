@@ -98,9 +98,9 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param array $list
+	 * @param array|string $items
 	 * @param bool $asArray
-	 * @return array|false|string
+	 * @return array|string
 	 */
 	private function prepareAliases($items, bool $asArray = false)
 	{
@@ -182,12 +182,42 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param array|string $fields
+	 * @param array|string $table
+	 * @return $this
+	 */
+	public function select($fields = '*', $table = ''): QueryBuilder
+	{
+		if (empty($fields) || empty($table)) {
+			$this->error = true;
+			return $this;
+		}
+
+		$this->reset();
+
+		if (is_array($fields)) {
+			$this->sql = "SELECT {$this->prepareAliases($fields)}";
+		} else if (is_string($fields)) {
+			$this->sql = "SELECT {$fields}";
+		}
+
+		if (is_array($table)) {
+			$this->sql .= " FROM {$this->prepareAliases($table)}";
+		} else if (is_string($table)) {
+			$this->sql .= " FROM `{$table}`";
+		}
+
+		return $this;
+	}
+
+	/**
 	 * @param string $table
 	 * @param array $where
 	 * @param string $addition
 	 * @return $this|false
 	 */
-	public function get(string $table, array $where = [], string $addition = '') {
+	public function get(string $table, array $where = [], string $addition = '')
+	{
 		return $this->action('SELECT *', $table, $where, $addition);
 	}
 
@@ -196,7 +226,8 @@ class QueryBuilder
 	 * @param string $addition
 	 * @return $this|false
 	 */
-	public function getAll(string $table, string $addition = '') {
+	public function getAll(string $table, string $addition = '')
+	{
 		return $this->action('SELECT *', $table, [], $addition);
 	}
 
@@ -207,7 +238,8 @@ class QueryBuilder
 	 * @param string $addition
 	 * @return $this|false
 	 */
-	public function getFields(string $table, array $fields, array $where = [], string $addition = '') {
+	public function getFields(string $table, array $fields, array $where = [], string $addition = '')
+	{
 		if (is_array($fields)) {
 			return $this->action("SELECT {$this->prepareAliases($fields)}", $table, $where, $addition);
 		} else if (is_string($fields)) {
@@ -223,7 +255,8 @@ class QueryBuilder
 	 * @param string $addition
 	 * @return $this|false
 	 */
-	public function delete($table, $where = [], $addition = '') {
+	public function delete($table, $where = [], $addition = '')
+	{
 		return $this->action('DELETE', $table, $where, $addition);
 	}
 
@@ -234,7 +267,8 @@ class QueryBuilder
 	 * @param string $addition
 	 * @return $this|false
 	 */
-	public function action(string $action, string $table, array $where = [], string $addition = '') {
+	public function action(string $action, string $table, array $where = [], string $addition = '')
+	{
 		if (empty($where)) {
 			$sql = "{$action} FROM `{$table}` {$addition}";
 			if (!$this->query($sql)->getError()) return $this;
@@ -253,7 +287,8 @@ class QueryBuilder
 	 * @param array $fields
 	 * @return bool
 	 */
-	public function insert(string $table, array $fields = []): bool {
+	public function insert(string $table, array $fields = []): bool
+	{
 		$values = '';
 		foreach ($fields as $field) {
 			$values .= "?,";
@@ -273,7 +308,8 @@ class QueryBuilder
 	 * @param string $addition
 	 * @return bool
 	 */
-	public function update(string $table, int $id, array $fields = [], string $addition = ''): bool {
+	public function update(string $table, int $id, array $fields = [], string $addition = ''): bool
+	{
 		$set = '';
 		foreach ($fields as $key => $field) {
 			$set .= "`{$key}` = ?,"; // username = ?, password = ?,
@@ -292,7 +328,8 @@ class QueryBuilder
 	 * @param array $on
 	 * @return $this|false|void
 	 */
-	public function join(array $tables, array $fields, array $on) {
+	public function join(array $tables, array $fields, array $on)
+	{
 		if (count($tables) !== 2 || count($on) !== 3) return false;
 
 		$field1 = $on[0];
