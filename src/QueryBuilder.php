@@ -258,6 +258,22 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param array|string $cond
+	 * @return $this
+	 */
+	public function notLike($cond = []): QueryBuilder
+	{
+		if ($cond) {
+			if (is_string($cond)) {
+				$this->where($cond);
+			} else if (is_array($cond)) {
+				$this->where([[$cond[0], 'NOT LIKE', $cond[1]]]);
+			}
+		}
+		return $this;
+	}
+
+	/**
 	 * @param int $limit
 	 * @return $this
 	 */
