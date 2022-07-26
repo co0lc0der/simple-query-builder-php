@@ -216,6 +216,12 @@ class QueryBuilder
 		return $this;
 	}
 
+	public function offset(int $offset = 0): QueryBuilder
+	{
+		$this->sql .= " OFFSET {$offset}";
+		return $this;
+	}
+
 	/**
 	 * @param string $table
 	 * @param array $where
