@@ -305,14 +305,13 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param $table
-	 * @param array $where
-	 * @param string $addition
-	 * @return $this|false
+	 * @param string$table
+	 * @return $this
 	 */
-	public function delete($table, $where = [], $addition = '')
+	public function delete(string $table): QueryBuilder
 	{
-		return $this->action('DELETE', $table, $where, $addition);
+		$this->sql = "DELETE FROM {$table}";
+		return $this;
 	}
 
 	/**
