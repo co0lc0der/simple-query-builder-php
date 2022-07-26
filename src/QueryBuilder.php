@@ -5,19 +5,40 @@ use PDO;
 
 class QueryBuilder
 {
-	private const OPERATORS = ['=', '>', '<', '>=', '<=', '!='];
-	private const LOGICS = ['AND', 'OR'];
-	private $pdo;
-	private $query;
+	private const OPERATORS = ['=', '>', '<', '>=', '<=', '!=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
+	private const LOGICS = ['AND', 'OR', 'NOT'];
+	private const SORT_TYPES = ['ASC', 'DESC'];
+	private const JOIN_TYPES = ['INNER', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
+	private $pdo = null;
+	private $query = null;
+	private $sql = '';
 	private $error = false;
 	private $results = [];
-	private $count = 0;
+	private $params = [];
+	private $count = -1;
 
 	/**
 	 * @param PDO $pdo
 	 */
-	public function __construct(PDO $pdo) {
+	public function __construct(PDO $pdo)
+	{
 		$this->pdo = $pdo;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getSql(): string
+	{
+		return $this->sql;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getParams(): array
+	{
+		return $this->params;
 	}
 
 	/**
