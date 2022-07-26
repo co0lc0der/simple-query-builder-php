@@ -438,23 +438,34 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param array $tables
-	 * @param array $fields
+	 * @param array|string $table
 	 * @param array $on
-	 * @return $this|false|void
+	 * @param string $join_type
+	 * @return $this
 	 */
-	public function join(array $tables, array $fields, array $on)
+	public function join($table = '', $on = [], string $join_type = 'INNER')
 	{
-		if (count($tables) !== 2 || count($on) !== 3) return false;
+		$join_type = strtoupper($join_type);
+    if (empty($join_type) || !in_array($join_type, self::JOIN_TYPES)) return $this;
 
-		$field1 = $on[0];
-		$operator = $on[1];
-		$field2 = $on[2];
+		if (is_array($table)) {
+			$this->sql .= " {$join_type} JOIN {$this->prepareAliases($table)}";
+		} else if (is_string($table)) {
+			$this->sql .= " {$join_type} JOIN `{$table}`";
+		}
 
-		if (!in_array($operator, self::OPERATORS)) return false;
+		if ($on) {
+			if (is_array($on)) {
+				$field1 = str_replace('.', '`.`', $on[0]);
+				$field1 = "`{$field1}`";
+				$field2 = str_replace('.', '`.`', $on[1]);
+				$field2 = "`{$field2}`";
+				$this->sql .= " ON {$field1} = {$field2}";
+			} else if (is_string($on)) {
+				$this->sql .= " ON {$on}";
+			}
+		}
 
-		$sql_tables = $this->prepareAliases($tables, true);
-		$sql = "SELECT {$this->prepareAliases($fields)} FROM {$sql_tables[0]} INNER JOIN {$sql_tables[1]} ON {$field1} {$operator} {$field2}";
-		if(!$this->query($sql)->getError()) return $this;
+		return $this;
 	}
 }
