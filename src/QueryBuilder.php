@@ -120,34 +120,48 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param array $where
-	 * @return array|false
+	 * @param array|string $where
+	 * @return array
 	 */
-	private function prepareCondition(array $where)
+	private function prepareConditions($where): array
 	{
-		if (empty($where)) return false;
-
-		$result = [];
+		$result = ['sql' => '', 'values' => []];
 		$sql = '';
 
-		foreach($where as $key => $cond):
-			if (is_array($cond)) {
-				if (count($cond) === 3) {
-					$field = $cond[0];
-					$operator = $cond[1];
-					$value = $cond[2];
+		if (empty($where)) return $result;
 
-					if (in_array($operator, self::OPERATORS)) {
-						$sql .= "(`{$field}` {$operator} :{$field})";
-						$result['values'][$field] = $value;
+		if (is_string($where)) {
+			$sql .= $where;
+		} else {
+			foreach ($where as $key => $cond):
+				if (is_array($cond)) {
+					if (count($cond) === 3) {
+						$field = $cond[0];
+						$operator = strtoupper($cond[1]);
+						$value = $cond[2];
+
+						if (in_array($operator, self::OPERATORS)) {
+							if ($operator == 'IN' && is_array($value)) {
+								$values = rtrim(str_repeat("?,", count($value)), ',');
+                $sql .= "(`{$field}` {$operator} ({$values}))";
+                foreach ($value as $item) {
+	                $result['values'][] = $item;
+                }
+							} else {
+								$sql .= "(`{$field}` {$operator} :{$field})";
+								$result['values'][$field] = $value;
+							}
+						}
+					}
+				} else if (is_string($cond)) {
+					$new_cond = strtoupper($cond);
+					if (in_array($new_cond, self::LOGICS)) {
+						$sql .= " {$new_cond} ";
 					}
 				}
-			} else {
-				if (in_array(strtoupper($cond), self::LOGICS)) {
-					$sql .= ' ' . strtoupper($cond) . ' ';
-				}
-			}
-		endforeach;
+			endforeach;
+		}
+
 		$result['sql'] = $sql;
 
 		return $result;
