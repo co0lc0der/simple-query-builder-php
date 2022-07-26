@@ -47,35 +47,40 @@ class QueryBuilder
 	/**
 	 * @return bool
 	 */
-	public function getError(): bool	{
+	public function getError(): bool
+	{
 		return $this->error;
 	}
 
 	/**
 	 * @return array
 	 */
-	public function getResults(): array {
+	public function getResults(): array
+	{
 		return $this->results;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getCount(): int {
+	public function getCount(): int
+	{
 		return $this->count;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getFirst(): string {
+	public function getFirst(): string
+	{
 		return $this->getResults()[0];
 	}
 
 	/**
 	 * @return false|mixed
 	 */
-	public function getLast() {
+	public function getLast()
+	{
 		return end($this->getResults());
 	}
 
@@ -97,12 +102,18 @@ class QueryBuilder
 	 * @param bool $asArray
 	 * @return array|false|string
 	 */
-	private function prepareAliases(array $list, bool $asArray = false) {
-		if (empty($list)) return false;
+	private function prepareAliases($items, bool $asArray = false)
+	{
+		if (empty($items)) return '';
 
 		$sql = [];
-		foreach($list as $alias => $item) {
-			$sql[] = (is_numeric($alias)) ? "{$item}" : "{$item} AS `{$alias}`";
+		if (is_string($items)) {
+			$sql[] = $items;
+		} else if (is_array($items)) {
+			foreach($items as $alias => $item) {
+				$new_item = str_replace('.', '`.`', $item);
+				$sql[] = is_numeric($alias) ? "`{$new_item}`" : "`{$new_item}` AS `{$alias}`";
+			}
 		}
 
 		return $asArray ? $sql : implode(', ', $sql);
@@ -112,7 +123,8 @@ class QueryBuilder
 	 * @param array $where
 	 * @return array|false
 	 */
-	private function prepareCondition(array $where) {
+	private function prepareCondition(array $where)
+	{
 		if (empty($where)) return false;
 
 		$result = [];
@@ -146,7 +158,8 @@ class QueryBuilder
 	 * @param array $params
 	 * @return $this
 	 */
-	public function query(string $sql, array $params = []): QueryBuilder {
+	public function query(string $sql, array $params = []): QueryBuilder
+	{
 		$this->error = false;
 		$this->query = $this->pdo->prepare($sql);
 
