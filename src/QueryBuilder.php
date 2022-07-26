@@ -89,12 +89,12 @@ class QueryBuilder
 	 */
 	public function reset()
 	{
-	  $this->sql = '';
-	  $this->params = [];
-	  $this->query = null;
-	  $this->results = [];
-	  $this->count = -1;
-	  $this->error = false;
+		$this->sql = '';
+		$this->params = [];
+		$this->query = null;
+		$this->results = [];
+		$this->count = -1;
+		$this->error = false;
 	}
 
 	/**
@@ -110,7 +110,7 @@ class QueryBuilder
 		if (is_string($items)) {
 			$sql[] = $items;
 		} else if (is_array($items)) {
-			foreach($items as $alias => $item) {
+			foreach ($items as $alias => $item) {
 				$new_item = str_replace('.', '`.`', $item);
 				$sql[] = is_numeric($alias) ? "`{$new_item}`" : "`{$new_item}` AS `{$alias}`";
 			}
@@ -163,15 +163,15 @@ class QueryBuilder
 		$this->error = false;
 		$this->query = $this->pdo->prepare($sql);
 
-		if(count($params)) {
+		if (count($params)) {
 			$i = 1;
-			foreach($params as $param) {
+			foreach ($params as $param) {
 				$this->query->bindValue($i, $param);
 				$i++;
 			}
 		}
 
-		if(!$this->query->execute()) {
+		if (!$this->query->execute()) {
 			$this->error = true;
 		} else {
 			$this->results = $this->query->fetchAll();
@@ -207,6 +207,12 @@ class QueryBuilder
 			$this->sql .= " FROM `{$table}`";
 		}
 
+		return $this;
+	}
+
+	public function limit(int $limit = 1): QueryBuilder
+	{
+		$this->sql .= " LIMIT {$limit}";
 		return $this;
 	}
 
