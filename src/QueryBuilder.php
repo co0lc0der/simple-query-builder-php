@@ -252,6 +252,20 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string $field
+	 * @return $this
+	 */
+	public function groupBy(string $field = ''): QueryBuilder
+	{
+		if (empty($field)) return $this;
+
+		$field = str_replace('.', '`.`', $field);
+		$this->sql .= " GROUP BY `{$field}`";
+
+		return $this;
+	}
+
+	/**
 	 * @param string $table
 	 * @param array $where
 	 * @param string $addition
