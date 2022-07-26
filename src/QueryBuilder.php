@@ -210,15 +210,44 @@ class QueryBuilder
 		return $this;
 	}
 
+	/**
+	 * @param int $limit
+	 * @return $this
+	 */
 	public function limit(int $limit = 1): QueryBuilder
 	{
 		$this->sql .= " LIMIT {$limit}";
 		return $this;
 	}
 
+	/**
+	 * @param int $offset
+	 * @return $this
+	 */
 	public function offset(int $offset = 0): QueryBuilder
 	{
 		$this->sql .= " OFFSET {$offset}";
+		return $this;
+	}
+
+	/**
+	 * @param string $field
+	 * @param string $sort
+	 * @return $this
+	 */
+	public function orderBy(string $field = '', string $sort = 'ASC'): QueryBuilder
+	{
+		if (empty($field) || empty($sort)) return $this;
+
+		$sort = strtoupper($sort);
+		$field = str_replace('.', '`.`', $field);
+
+		if (in_array($sort, self::SORT_TYPES)) {
+			$this->sql .= " ORDER BY `{$field}` {$sort}";
+		} else {
+			$this->sql .= " ORDER BY `{$field}`";
+		}
+
 		return $this;
 	}
 
