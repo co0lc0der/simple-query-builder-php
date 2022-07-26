@@ -237,7 +237,7 @@ class QueryBuilder
 		} else {
 			$this->sql .= " WHERE {$conditions['sql']}";
 		}
-		$this->params[] = $conditions['values'];
+		$this->params = array_merge($this->params, $conditions['values']);
 		return $this;
 	}
 
@@ -420,23 +420,21 @@ class QueryBuilder
 
 	/**
 	 * @param string $table
-	 * @param int $id
 	 * @param array $fields
-	 * @param string $addition
-	 * @return bool
+	 * @return $this
 	 */
-	public function update(string $table, int $id, array $fields = [], string $addition = ''): bool
+	public function update(string $table, array $fields = []): QueryBuilder
 	{
-		$set = '';
+		$sets = '';
 		foreach ($fields as $key => $field) {
-			$set .= "`{$key}` = ?,"; // username = ?, password = ?,
+			$sets .= " `{$key}` = :{$key},";
 		}
-		$set = rtrim($set, ','); // username = ?, password = ?
+		$sets = rtrim($sets, ',');
 
-		$sql = "UPDATE `{$table}` SET {$set} WHERE `id` = {$id} {$addition}";
-		if ($this->query($sql, $fields)->getError()) return false;
+		$this->sql = "UPDATE `{$table}` SET{$sets}";
+		$this->params = $fields;
 
-		return true;
+		return $this;
 	}
 
 	/**
