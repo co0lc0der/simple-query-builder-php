@@ -409,20 +409,31 @@ class QueryBuilder
 	/**
 	 * @param string $table
 	 * @param array $fields
-	 * @return bool
+	 * @return $this
 	 */
-	public function insert(string $table, array $fields = []): bool
+	public function insert(string $table, array $fields = []): QueryBuilder
 	{
-		$values = '';
-		foreach ($fields as $field) {
-			$values .= "?,";
+		if (empty($table) || empty($fields)) return $this;
+
+		if (!is_array($fields[0])) {
+			$values = rtrim(str_repeat("?,", count($fields)), ',');
+			$this->sql = "INSERT INTO `{$table}` (`" . implode('`, `', array_keys($fields)) . "`) VALUES ({$values})";
+			$this->params = array_values($fields);
+		} else {
+			$names = array_shift($fields);
+			$value = rtrim(str_repeat("?,", count($names)), ',');
+			$values = rtrim(str_repeat("({$value}),", count($fields)), ',');
+			$this->sql = "INSERT INTO `{$table}` (`" . implode('`, `', $names) . "`) VALUES {$values}";
+			$params = [];
+			foreach ($fields as $item) {
+				if (is_array($item)) {
+					$params = array_merge($params, $item);
+				}
+			}
+			$this->params = $params;
 		}
-		$val = rtrim($values, ',');
 
-		$sql = "INSERT INTO `{$table}` (" . '`' . implode('`, `', array_keys($fields)) . '`' . ") VALUES ({$val})";
-		if ($this->query($sql, $fields)->getError()) return false;
-
-		return true;
+		return $this;
 	}
 
 	/**
@@ -450,7 +461,7 @@ class QueryBuilder
 	 * @param string $join_type
 	 * @return $this
 	 */
-	public function join($table = '', $on = [], string $join_type = 'INNER')
+	public function join($table = '', $on = [], string $join_type = 'INNER'): QueryBuilder
 	{
 		$join_type = strtoupper($join_type);
     if (empty($join_type) || !in_array($join_type, self::JOIN_TYPES)) return $this;
