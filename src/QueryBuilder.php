@@ -486,15 +486,26 @@ class QueryBuilder
 	 * @param string $join_type
 	 * @return $this
 	 */
-	public function join($table = '', $on = [], string $join_type = 'INNER'): QueryBuilder
+	public function join($table, array $on = [], string $join_type = 'INNER'): QueryBuilder
 	{
 		$join_type = strtoupper($join_type);
-    if (empty($join_type) || !in_array($join_type, self::JOIN_TYPES)) return $this;
+		if (empty($join_type) || !in_array($join_type, self::JOIN_TYPES)) {
+			$this->setError('Empty $join_type or is not allowed in ' . __METHOD__);
+			return $this;
+		}
+
+		if (empty($table)) {
+			$this->setError('Empty $table in ' . __METHOD__);
+			return $this;
+		}
 
 		if (is_array($table)) {
 			$this->sql .= " {$join_type} JOIN {$this->prepareAliases($table)}";
 		} else if (is_string($table)) {
 			$this->sql .= " {$join_type} JOIN `{$table}`";
+		} else {
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
+			return $this;
 		}
 
 		if ($on) {
@@ -508,6 +519,8 @@ class QueryBuilder
 				$this->sql .= " ON {$on}";
 			}
 		}
+
+		$this->setError();
 
 		return $this;
 	}
