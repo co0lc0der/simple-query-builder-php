@@ -16,6 +16,7 @@ class QueryBuilder
 	private $query = null;
 	private $sql = '';
 	private $error = false;
+	private $errorMessage = '';
 	private $results = [];
 	private $params = [];
 	private $count = -1;
@@ -50,6 +51,14 @@ class QueryBuilder
 	public function getError(): bool
 	{
 		return $this->error;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getErrorMessage(): string
+	{
+		return $this->errorMessage;
 	}
 
 	/**
@@ -95,6 +104,7 @@ class QueryBuilder
 		$this->results = [];
 		$this->count = -1;
 		$this->error = false;
+		$this->errorMessage = '';
 	}
 
 	/**
@@ -336,45 +346,6 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param string $table
-	 * @param array $where
-	 * @param string $addition
-	 * @return $this|false
-	 */
-	public function get(string $table, array $where = [], string $addition = '')
-	{
-		return $this->action('SELECT *', $table, $where, $addition);
-	}
-
-	/**
-	 * @param string $table
-	 * @param string $addition
-	 * @return $this|false
-	 */
-	public function getAll(string $table, string $addition = '')
-	{
-		return $this->action('SELECT *', $table, [], $addition);
-	}
-
-	/**
-	 * @param string $table
-	 * @param array $fields
-	 * @param array $where
-	 * @param string $addition
-	 * @return $this|false
-	 */
-	public function getFields(string $table, array $fields, array $where = [], string $addition = '')
-	{
-		if (is_array($fields)) {
-			return $this->action("SELECT {$this->prepareAliases($fields)}", $table, $where, $addition);
-		} else if (is_string($fields)) {
-			return $this->action("SELECT {$fields}", $table, $where, $addition);
-		}
-
-		return false;
-	}
-
-	/**
 	 * @param string$table
 	 * @return $this
 	 */
@@ -382,28 +353,6 @@ class QueryBuilder
 	{
 		$this->sql = "DELETE FROM {$table}";
 		return $this;
-	}
-
-	/**
-	 * @param string $action
-	 * @param string $table
-	 * @param array $where
-	 * @param string $addition
-	 * @return $this|false
-	 */
-	public function action(string $action, string $table, array $where = [], string $addition = '')
-	{
-		if (empty($where)) {
-			$sql = "{$action} FROM `{$table}` {$addition}";
-			if (!$this->query($sql)->getError()) return $this;
-		}
-
-		$condition = $this->prepareCondition($where);
-
-		$sql = "{$action} FROM `{$table}` WHERE {$condition['sql']} {$addition}";
-		if(!$this->query($sql, $condition['values'])->getError()) return $this;
-
-		return false;
 	}
 
 	/**
