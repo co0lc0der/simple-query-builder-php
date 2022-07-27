@@ -386,20 +386,37 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param string $table
+	 * @param array|string $table
 	 * @param array $fields
 	 * @return $this
 	 */
-	public function update(string $table, array $fields = []): QueryBuilder
+	public function update($table, array $fields = []): QueryBuilder
 	{
+		if (empty($table) || empty($fields)) {
+			$this->setError('Empty $table or $fields in ' . __METHOD__);
+			return $this;
+		}
+
+		if (is_array($table)) {
+			$table = "`{$this->prepareAliases($table)}`";
+		} else if (is_string($table)) {
+			$table = "`{$table}`";
+		} else {
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
+			return $this;
+		}
+
+		$this->reset();
+
 		$sets = '';
 		foreach ($fields as $key => $field) {
-			$sets .= " `{$key}` = :{$key},";
+			$new_key = str_replace('.', '`.`', $key);
+			$sets .= " `{$new_key}` = ?,";
 		}
 		$sets = rtrim($sets, ',');
 
-		$this->sql = "UPDATE `{$table}` SET{$sets}";
-		$this->params = $fields;
+		$this->sql = "UPDATE {$table} SET{$sets}";
+		$this->params = array_values($fields);
 
 		return $this;
 	}
