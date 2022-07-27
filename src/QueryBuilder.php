@@ -96,9 +96,9 @@ class QueryBuilder
 	}
 
 	/**
-	 * @return false|mixed
+	 * @return array
 	 */
-	public function getLast()
+	public function getLast(): array
 	{
 		return end($this->results);
 	}
@@ -114,6 +114,27 @@ class QueryBuilder
 		$this->results = [];
 		$this->count = -1;
 		$this->setError();
+	}
+
+	/**
+	 * @param array|string $table
+	 * @param string $field
+	 * @return $this
+	 */
+	public function count($table, string $field = ''): QueryBuilder
+	{
+		if (empty($table)) {
+			$this->setError('Empty $table in ' . __METHOD__);
+			return $this;
+		}
+
+		if (empty($field)) {
+			$this->select('COUNT(*) AS `counter`', $table);
+		} else {
+			$this->select("COUNT(`{$field}`) AS `counter`", $table);
+		}
+
+		return $this;
 	}
 
 	/**
