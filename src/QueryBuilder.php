@@ -356,29 +356,45 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param string $table
+	 * @param array|string $table
 	 * @param array $fields
 	 * @return $this
 	 */
-	public function insert(string $table, array $fields = []): QueryBuilder
+	public function insert($table, array $fields = []): QueryBuilder
 	{
-		if (empty($table) || empty($fields)) return $this;
+		if (empty($table) || empty($fields)) {
+			$this->setError('Empty $table or $fields in ' . __METHOD__);
+			return $this;
+		}
+
+		if (is_array($table)) {
+			$table = "`{$this->prepareAliases($table)}`";
+		} else if (is_string($table)) {
+			$table = "`{$table}`";
+		} else {
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
+			return $this;
+		}
+
+		$this->reset();
 
 		if (!is_array($fields[0])) {
 			$values = rtrim(str_repeat("?,", count($fields)), ',');
-			$this->sql = "INSERT INTO `{$table}` (`" . implode('`, `', array_keys($fields)) . "`) VALUES ({$values})";
+			$this->sql = "INSERT INTO {$table} (`" . implode('`, `', array_keys($fields)) . "`) VALUES ({$values})";
 			$this->params = array_values($fields);
 		} else {
 			$names = array_shift($fields);
 			$value = rtrim(str_repeat("?,", count($names)), ',');
 			$values = rtrim(str_repeat("({$value}),", count($fields)), ',');
-			$this->sql = "INSERT INTO `{$table}` (`" . implode('`, `', $names) . "`) VALUES {$values}";
+			$this->sql = "INSERT INTO {$table} (`" . implode('`, `', $names) . "`) VALUES {$values}";
 			$params = [];
+
 			foreach ($fields as $item) {
 				if (is_array($item)) {
 					$params = array_merge($params, $item);
 				}
 			}
+
 			$this->params = $params;
 		}
 
