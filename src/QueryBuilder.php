@@ -372,12 +372,29 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param string$table
+	 * @param array|string $table
 	 * @return $this
 	 */
-	public function delete(string $table): QueryBuilder
+	public function delete($table): QueryBuilder
 	{
+		if (empty($table)) {
+			$this->setError('Empty $table in ' . __METHOD__);
+			return $this;
+		}
+
+		if (is_array($table)) {
+			$table = "`{$this->prepareAliases($table)}`";
+		} else if (is_string($table)) {
+			$table = "`{$table}`";
+		} else {
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
+			return $this;
+		}
+
+		$this->reset();
+
 		$this->sql = "DELETE FROM {$table}";
+
 		return $this;
 	}
 
