@@ -62,6 +62,16 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string $message
+	 * @return void
+	 */
+	public function setError(string $message = ''): void
+	{
+		$this->error = !empty($message);
+		$this->errorMessage = $message;
+	}
+
+	/**
 	 * @return array
 	 */
 	public function getResults(): array
@@ -90,7 +100,7 @@ class QueryBuilder
 	 */
 	public function getLast()
 	{
-		return end($this->getResults());
+		return end($this->results);
 	}
 
 	/**
@@ -103,8 +113,7 @@ class QueryBuilder
 		$this->query = null;
 		$this->results = [];
 		$this->count = -1;
-		$this->error = false;
-		$this->errorMessage = '';
+		$this->setError();
 	}
 
 	/**
@@ -114,7 +123,10 @@ class QueryBuilder
 	 */
 	private function prepareAliases($items, bool $asArray = false)
 	{
-		if (empty($items)) return '';
+		if (empty($items)) {
+			$this->setError('Empty $items in ' . __METHOD__);
+			return '';
+		}
 
 		$sql = [];
 		if (is_string($items)) {
@@ -138,7 +150,10 @@ class QueryBuilder
 		$result = ['sql' => '', 'values' => []];
 		$sql = '';
 
-		if (empty($where)) return $result;
+		if (empty($where)) {
+			$this->setError('Empty $where in ' . __METHOD__);
+			return $result;
+		}
 
 		if (is_string($where)) {
 			$sql .= $where;
@@ -219,8 +234,8 @@ class QueryBuilder
 	 */
 	public function select($fields = '*', $table = ''): QueryBuilder
 	{
-		if (empty($fields) || empty($table)) {
-			$this->error = true;
+		if (empty($table) || empty($fields)) {
+			$this->setError('Empty $table or $fields in ' . __METHOD__);
 			return $this;
 		}
 
@@ -249,12 +264,15 @@ class QueryBuilder
 	public function where($where, string $addition = ''): QueryBuilder
 	{
 		$conditions = $this->prepareConditions($where);
+
 		if (!empty($addition)) {
 			$this->sql .= " WHERE {$conditions['sql']} {$addition}";
 		} else {
 			$this->sql .= " WHERE {$conditions['sql']}";
 		}
+
 		$this->params = array_merge($this->params, $conditions['values']);
+
 		return $this;
 	}
 
@@ -271,6 +289,7 @@ class QueryBuilder
 				$this->where([[$cond[0], 'LIKE', $cond[1]]]);
 			}
 		}
+
 		return $this;
 	}
 
@@ -287,6 +306,7 @@ class QueryBuilder
 				$this->where([[$cond[0], 'NOT LIKE', $cond[1]]]);
 			}
 		}
+
 		return $this;
 	}
 
@@ -317,7 +337,10 @@ class QueryBuilder
 	 */
 	public function orderBy(string $field = '', string $sort = 'ASC'): QueryBuilder
 	{
-		if (empty($field) || empty($sort)) return $this;
+		if (empty($field) || empty($sort)) {
+			$this->setError('Empty $field or $sort in ' . __METHOD__);
+			return $this;
+		}
 
 		$sort = strtoupper($sort);
 		$field = str_replace('.', '`.`', $field);
@@ -337,7 +360,10 @@ class QueryBuilder
 	 */
 	public function groupBy(string $field = ''): QueryBuilder
 	{
-		if (empty($field)) return $this;
+		if (empty($field)) {
+			$this->setError('Empty $field in ' . __METHOD__);
+			return $this;
+		}
 
 		$field = str_replace('.', '`.`', $field);
 		$this->sql .= " GROUP BY `{$field}`";
