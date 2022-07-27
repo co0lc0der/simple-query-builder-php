@@ -136,9 +136,12 @@ class QueryBuilder
 			foreach ($where as $key => $cond):
 				if (is_array($cond)) {
 					if (count($cond) === 3) {
-						$field = $cond[0];
+						$field = str_replace('.', '`.`', $cond[0]);
 						$operator = strtoupper($cond[1]);
 						$value = $cond[2];
+						if (!is_numeric($value) && is_string($value)) {
+							$value = str_replace('.', '`.`', $value);
+						}
 
 						if (in_array($operator, self::OPERATORS)) {
 							if ($operator == 'IN' && is_array($value)) {
@@ -148,8 +151,12 @@ class QueryBuilder
 	                $result['values'][] = $item;
                 }
 							} else {
-								$sql .= "(`{$field}` {$operator} :{$field})";
-								$result['values'][$field] = $value;
+								if (is_numeric($value) || (is_string($value) && strpos($value, '.') === false)) {
+									$sql .= "(`{$field}` {$operator} ?)";
+									$result['values'][] = $value;
+								} else {
+									$sql .= "(`{$field}` {$operator} `{$value}`)";
+								}
 							}
 						}
 					}
