@@ -117,6 +117,24 @@ class QueryBuilder
 	}
 
 	/**
+	 * @return array
+	 */
+	public function all(): array
+	{
+		$this->query();
+		return $this->result;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function one(): array
+	{
+		$this->query('', [], true);
+		return $this->result;
+	}
+
+	/**
 	 * @param array|string $table
 	 * @param string $field
 	 * @return $this
