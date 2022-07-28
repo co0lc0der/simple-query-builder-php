@@ -17,7 +17,7 @@ class QueryBuilder
 	private $sql = '';
 	private $error = false;
 	private $errorMessage = '';
-	private $results = [];
+	private $result = [];
 	private $params = [];
 	private $count = -1;
 
@@ -74,9 +74,9 @@ class QueryBuilder
 	/**
 	 * @return array
 	 */
-	public function getResults(): array
+	public function getResult(): array
 	{
-		return $this->results;
+		return $this->result;
 	}
 
 	/**
@@ -92,7 +92,7 @@ class QueryBuilder
 	 */
 	public function getFirst(): string
 	{
-		return $this->getResults()[0];
+		return $this->getResult()[0];
 	}
 
 	/**
@@ -100,7 +100,7 @@ class QueryBuilder
 	 */
 	public function getLast(): array
 	{
-		return end($this->results);
+		return end($this->result);
 	}
 
 	/**
@@ -111,7 +111,7 @@ class QueryBuilder
 		$this->sql = '';
 		$this->params = [];
 		$this->query = null;
-		$this->results = [];
+		$this->result = [];
 		$this->count = -1;
 		$this->setError();
 	}
@@ -223,26 +223,41 @@ class QueryBuilder
 	/**
 	 * @param string $sql
 	 * @param array $params
+	 * @param bool $one
 	 * @return $this
 	 */
-	public function query(string $sql, array $params = []): QueryBuilder
+	public function query(string $sql = '', array $params = [], bool $one = false): QueryBuilder
 	{
-		$this->error = false;
-		$this->query = $this->pdo->prepare($sql);
+		$this->setError();
 
-		if (count($params)) {
+		if (!empty($sql)) {
+			$this->sql = $sql;
+		}
+
+		$this->query = $this->pdo->prepare($this->sql);
+
+		if (!empty($params)) {
+			$this->params = $params;
+		}
+
+		if (!empty($this->params)) {
 			$i = 1;
-			foreach ($params as $param) {
+			foreach ($this->params as $param) {
 				$this->query->bindValue($i, $param);
 				$i++;
 			}
 		}
 
 		if (!$this->query->execute()) {
-			$this->error = true;
+			$this->setError('Error executing query in ' . __METHOD__);
 		} else {
-			$this->results = $this->query->fetchAll();
-			$this->count = count($this->results);
+			if ($one) {
+				$this->result = $this->query->fetch();
+			} else {
+				$this->result = $this->query->fetchAll();
+			}
+
+			$this->count = count($this->result);
 		}
 
 		return $this;
