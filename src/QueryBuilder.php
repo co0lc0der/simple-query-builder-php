@@ -220,10 +220,18 @@ class QueryBuilder
                 }
 							} else {
 								if (is_numeric($value) || (is_string($value) && strpos($value, '.') === false)) {
-									$sql .= "(`{$field}` {$operator} ?)";
+									if (strpos($field, '(') !== false || strpos($item, ')') !== false) {
+										$sql .= "({$field} {$operator} ?)";
+									} else {
+										$sql .= "(`{$field}` {$operator} ?)";
+									}
 									$result['values'][] = $value;
 								} else {
-									$sql .= "(`{$field}` {$operator} `{$value}`)";
+									if (strpos($field, '(') !== false || strpos($item, ')') !== false) {
+										$sql .= "({$field} {$operator} `{$value}`)";
+									} else {
+										$sql .= "(`{$field}` {$operator} `{$value}`)";
+									}
 								}
 							}
 						}
