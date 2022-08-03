@@ -321,6 +321,11 @@ class QueryBuilder
 	 */
 	public function where($where, string $addition = ''): QueryBuilder
 	{
+		if (empty($where)) {
+			$this->setError('Empty $where in ' . __METHOD__);
+			return $this;
+		}
+
 		$conditions = $this->prepareConditions($where);
 
 		if (!empty($addition)) {
@@ -329,7 +334,9 @@ class QueryBuilder
 			$this->sql .= " WHERE {$conditions['sql']}";
 		}
 
-		$this->params = array_merge($this->params, $conditions['values']);
+		if (!empty($conditions['values'])) {
+			$this->params = array_merge($this->params, $conditions['values']);
+		}
 
 		return $this;
 	}
