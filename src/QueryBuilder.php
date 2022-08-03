@@ -173,7 +173,11 @@ class QueryBuilder
 		} else if (is_array($items)) {
 			foreach ($items as $alias => $item) {
 				$new_item = str_replace('.', '`.`', $item);
-				$sql[] = is_numeric($alias) ? "`{$new_item}`" : "`{$new_item}` AS `{$alias}`";
+				if (strpos($item, '(') !== false || strpos($item, ')') !== false) {
+					$sql[] = is_numeric($alias) ? "{$new_item}" : "{$new_item} AS `{$alias}`";
+				} else {
+					$sql[] = is_numeric($alias) ? "`{$new_item}`" : "`{$new_item}` AS `{$alias}`";
+				}
 			}
 		}
 
