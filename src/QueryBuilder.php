@@ -282,11 +282,11 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param array|string $fields
 	 * @param array|string $table
+	 * @param array|string $fields
 	 * @return $this
 	 */
-	public function select($fields = '*', $table = ''): QueryBuilder
+	public function select($table, $fields = '*'): QueryBuilder
 	{
 		if (empty($table) || empty($fields)) {
 			$this->setError('Empty $table or $fields in ' . __METHOD__);
