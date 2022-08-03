@@ -350,6 +350,28 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param array|string $having
+	 * @return $this
+	 */
+	public function having($having): QueryBuilder
+	{
+		if (empty($having)) {
+			$this->setError('Empty $having in ' . __METHOD__);
+			return $this;
+		}
+
+		$conditions = $this->prepareConditions($having);
+
+		$this->sql .= " HAVING {$conditions['sql']}";
+
+		if (!empty($conditions['values'])) {
+			$this->params = array_merge($this->params, $conditions['values']);
+		}
+
+		return $this;
+	}
+
+	/**
 	 * @param array|string $cond
 	 * @return $this
 	 */
