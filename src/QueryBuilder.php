@@ -12,6 +12,9 @@ class QueryBuilder
 	private const LOGICS = ['AND', 'OR', 'NOT'];
 	private const SORT_TYPES = ['ASC', 'DESC'];
 	private const JOIN_TYPES = ['INNER', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
+	private const NO_FETCH = 0;
+	private const FETCH_ONE = 1;
+	private const FETCH_ALL = 2;
 	private $pdo = null;
 	private $query = null;
 	private $sql = '';
@@ -130,7 +133,7 @@ class QueryBuilder
 	 */
 	public function one(): array
 	{
-		$this->query('', [], true);
+		$this->query($this->sql, $this->params, self::FETCH_ONE);
 		return $this->result;
 	}
 
@@ -256,7 +259,7 @@ class QueryBuilder
 	 * @param bool $one
 	 * @return $this
 	 */
-	public function query(string $sql = '', array $params = [], bool $one = false): QueryBuilder
+	public function query(string $sql = '', array $params = [], int $fetch = self::FETCH_ALL): QueryBuilder
 	{
 		$this->setError();
 
@@ -281,9 +284,9 @@ class QueryBuilder
 		if (!$this->query->execute()) {
 			$this->setError('Error executing query in ' . __METHOD__);
 		} else {
-			if ($one) {
+			if ($fetch === self::FETCH_ONE) {
 				$this->result = $this->query->fetch();
-			} else {
+			} else if ($fetch === self::FETCH_ALL) {
 				$this->result = $this->query->fetchAll();
 			}
 
@@ -516,7 +519,7 @@ class QueryBuilder
 
 		$this->reset();
 
-		if (!is_array($fields[0])) {
+		if (isset($fields[0]) && !is_array($fields[0])) {
 			$values = rtrim(str_repeat("?,", count($fields)), ',');
 			$this->sql = "INSERT INTO {$table} (`" . implode('`, `', array_keys($fields)) . "`) VALUES ({$values})";
 			$this->params = array_values($fields);
