@@ -150,9 +150,9 @@ class QueryBuilder
 		}
 
 		if (empty($field)) {
-			$this->select('COUNT(*) AS `counter`', $table);
+			$this->select($table, 'COUNT(*) AS `counter`');
 		} else {
-			$this->select("COUNT(`{$field}`) AS `counter`", $table);
+			$this->select($table, "COUNT(`{$field}`) AS `counter`");
 		}
 
 		return $this;
