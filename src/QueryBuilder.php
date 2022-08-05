@@ -622,4 +622,27 @@ class QueryBuilder
 
 		return $this;
 	}
+
+	/**
+	 * @param string $table
+	 * @param bool $add_exists
+	 * @return $this
+	 */
+	public function drop(string $table, bool $add_exists = true): QueryBuilder
+	{
+		if (empty($table)) {
+			$this->setError('Empty $table in ' . __METHOD__);
+			return $this;
+		}
+
+		$exists = '';
+		if ($add_exists) {
+			$exists = 'IF EXISTS ';
+		}
+
+		$this->reset();
+		$this->sql = "DROP TABLE {$exists}`{$table}`;";
+
+		return $this;
+	}
 }
