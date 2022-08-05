@@ -645,4 +645,21 @@ class QueryBuilder
 
 		return $this;
 	}
+
+	/**
+	 * @param string $table
+	 * @return $this
+	 */
+	public function truncate(string $table): QueryBuilder
+	{
+		if (empty($table)) {
+			$this->setError('Empty $table in ' . __METHOD__);
+			return $this;
+		}
+
+		$this->reset();
+		$this->sql = "TRUNCATE TABLE `{$table}`;";
+
+		return $this;
+	}
 }
