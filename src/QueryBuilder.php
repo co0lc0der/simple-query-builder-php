@@ -267,6 +267,10 @@ class QueryBuilder
 			$this->sql = $sql;
 		}
 
+		if (substr($this->sql, -1) != ';') {
+			$this->sql .= ';';
+		}
+
 		$this->query = $this->pdo->prepare($this->sql);
 
 		if (!empty($params)) {
