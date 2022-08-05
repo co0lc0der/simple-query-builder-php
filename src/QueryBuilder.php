@@ -584,11 +584,11 @@ class QueryBuilder
 
 	/**
 	 * @param array|string $table
-	 * @param array $on
+	 * @param $on
 	 * @param string $join_type
 	 * @return $this
 	 */
-	public function join($table, array $on = [], string $join_type = 'INNER'): QueryBuilder
+	public function join($table, $on, string $join_type = 'INNER'): QueryBuilder
 	{
 		$join_type = strtoupper($join_type);
 		if (empty($join_type) || !in_array($join_type, self::JOIN_TYPES)) {
