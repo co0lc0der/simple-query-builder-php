@@ -33,6 +33,23 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string $sql
+	 * @return string
+	 */
+	public function addSemicolon(string $sql = ''): string
+	{
+		$new_sql = (empty($sql)) ? $this->sql : $sql;
+
+		$new_sql .= (substr($new_sql, -1) != ';') ? ';' : '';
+
+		if (empty($sql)) {
+			$this->sql = $new_sql;
+		}
+
+		return $new_sql;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getSql(): string
@@ -267,9 +284,7 @@ class QueryBuilder
 			$this->sql = $sql;
 		}
 
-		if (substr($this->sql, -1) != ';') {
-			$this->sql .= ';';
-		}
+		$this->addSemicolon();
 
 		$this->query = $this->pdo->prepare($this->sql);
 
@@ -639,13 +654,10 @@ class QueryBuilder
 			return $this;
 		}
 
-		$exists = '';
-		if ($add_exists) {
-			$exists = 'IF EXISTS ';
-		}
+		$exists = ($add_exists) ? 'IF EXISTS ' : '';
 
 		$this->reset();
-		$this->sql = "DROP TABLE {$exists}`{$table}`;";
+		$this->sql = "DROP TABLE {$exists}`{$table}`";
 
 		return $this;
 	}
@@ -662,7 +674,7 @@ class QueryBuilder
 		}
 
 		$this->reset();
-		$this->sql = "TRUNCATE TABLE `{$table}`;";
+		$this->sql = "TRUNCATE TABLE `{$table}`";
 
 		return $this;
 	}
