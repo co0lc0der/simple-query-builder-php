@@ -185,6 +185,20 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string $columnName
+	 * @return array
+	 */
+	public function column(string $columnName): array
+	{
+		if (empty($columnName)) {
+			$this->setError('Empty $columnName in ' . __METHOD__);
+			return [];
+		}
+
+		return array_column($this->all(), $columnName);
+	}
+
+	/**
 	 * @param array|string $items
 	 * @param bool $asArray
 	 * @return array|string
