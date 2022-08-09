@@ -37,7 +37,7 @@ to the require section of your `composer.json` file.
 - `reset()` resets state to default values (except PDO property)
 - `all()` executes SQL query and return all rows of result (`fetchAll()`)
 - `one()` executes SQL query and return the first row of result (`fetch()`)
-- `column($columnName)` executes SQL query and return needed column of result
+- `column()` executes SQL query and return the first column of result (`fetchColumn()`)
 - `go()` this method is for non `SELECT` queries. it executes SQL query and return nothing (but returns the last inserted row ID for `INSERT` method)
 - `count()` prepares a query with SQL `COUNT()` function
 - `query($sql, $params[], $fetch_type)` executes prepared `$sql` with `$params`. it can be used for custom queries

@@ -15,6 +15,7 @@ class QueryBuilder
 	private const NO_FETCH = 0;
 	private const FETCH_ONE = 1;
 	private const FETCH_ALL = 2;
+	private const FETCH_COLUMN = 3;
 	private $pdo = null;
 	private $query = null;
 	private $sql = '';
@@ -185,17 +186,13 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param string $columnName
-	 * @return array
+	 * @return array|string
 	 */
-	public function column(string $columnName): array
+	public function column()
 	{
-		if (empty($columnName)) {
-			$this->setError('Empty $columnName in ' . __METHOD__);
-			return [];
-		}
+		$this->query('', [], self::FETCH_COLUMN);
 
-		return array_column($this->all(), $columnName);
+		return $this->result;
 	}
 
 	/**
@@ -330,9 +327,13 @@ class QueryBuilder
 				$this->result = $this->query->fetch();
 			} else if ($fetch === self::FETCH_ALL) {
 				$this->result = $this->query->fetchAll();
+			} else if ($fetch === self::FETCH_COLUMN) {
+				$this->result = $this->query->fetchColumn();
 			}
 
-			$this->count = count($this->result);
+			if (is_array($this->result)) {
+				$this->count = count($this->result);
+			}
 		}
 
 		return $this;
