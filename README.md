@@ -40,7 +40,7 @@ to the require section of your `composer.json` file.
 - `go()` this method is for non SELECT queries. it executes SQL query and return nothing (but return Last inserted row ID for INSERT method)
 - `query($sql, $params[], $fetch_type)` execute prepared `$sql` with `$params`. it can be used for custom queries
 - `count()` prepare a query with SQL `COUNT()` function
-- 'SQL' methods are presented in [Usage section](#usageexamples)
+- 'SQL' methods are presented in [Usage section](#usage-examples)
 
 ### Edit `config.php` and set the parameters up. Choose DB driver, DB name etc. 
 ```php
