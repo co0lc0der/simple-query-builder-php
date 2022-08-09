@@ -155,6 +155,15 @@ class QueryBuilder
 	}
 
 	/**
+	 * @return int
+	 */
+	public function go(): int
+	{
+		$this->query($this->sql, $this->params, self::NO_FETCH);
+		return $this->pdo->lastInsertId();
+	}
+
+	/**
 	 * @param array|string $table
 	 * @param string $field
 	 * @return $this
