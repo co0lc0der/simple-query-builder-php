@@ -1,115 +1,258 @@
 # QueryBuilder php component
 
 [![Latest Version](https://img.shields.io/github/release/co0lc0der/QueryBuilder-component?style=flat-square)](https://github.com/co0lc0der/QueryBuilder-component/release)
+![GitHub repo size](https://img.shields.io/github/repo-size/co0lc0der/QueryBuilder-component?color=orange&label=size&style=flat-square)
 [![Packagist Downloads](https://img.shields.io/packagist/dt/co0lc0der/simple-query-builder?color=yellow&style=flat-square)](https://packagist.org/packages/co0lc0der/simple-query-builder)
 [![GitHub license](https://img.shields.io/github/license/co0lc0der/QueryBuilder-component?style=flat-square)](https://github.com/co0lc0der/QueryBuilder-component/blob/main/LICENSE.md)
+![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/co0lc0der/simple-query-builder?color=8993be&style=flat-square)
 
-This is a small easy-to-use php component for working with a database by PDO. It provides some public methods to manipulate data. Each SQL query is prepared and safe. PDO fetches data to arrays. See `example/example.php` for examples.
-### Public methods:
-- `getResults()` returns query's results
-- `getCount()` returns results' rows count
-- `getError()` returns true if an error is
-- `getFirst()` returns the fist item of results
-- `getLast()` returns the last item of results
-- other methods are presented in Usage section
+This is a small easy-to-use PHP component for working with a database by PDO. It provides some public methods to compose SQL queries and manipulate data. Each SQL query is prepared and safe. PDO (see `Connection` class) fetches data to _arrays_ by default. See `example/example.php` for examples. At present time the component supports MySQL and SQLite (file or memory).
+
+## Installation
+
+The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
+
+Either run
+
+```sh
+composer require co0lc0der/simple-query-builder
+```
+
+or add
+
+```json
+"co0lc0der/simple-query-builder": "*"
+```
+
+to the require section of your `composer.json` file.
+
+
 ## How to use
-### 1. Edit `config.php` and set the parameters up. Choose DB driver, DB name etc. At present time the component supports MySQL and SQLite (file or memory).
+### 1. Edit `config.php` and set the parameters up. Choose DB driver, DB name etc. 
 ```php
 $config = require_once __DIR__ . '/config.php';
 ```
-### 2. Load `Connection` and `QueryBuilder` classes.
-```php
-require_once __DIR__ . '/QueryBuilder/src/Connection.php';
-require_once __DIR__ . '/QueryBuilder/src/QueryBuilder.php';
-```
-or using PSR-4 composer autoloader
+### 2. Use composer autoloader
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 
 use co0lc0der\QueryBuilder\Connection;
 use co0lc0der\QueryBuilder\QueryBuilder;
 ```
-### 3. Init QueryBuilder with `Connection::make()`.
+### 3. Init `QueryBuilder` with `Connection::make()`.
 ```php
 $query = new QueryBuilder(Connection::make($config['database']));
 ```
 ### 4. Usage examples.
-- Select all rows
+- Select all rows from a table
 ```php
-$query->getAll('users');
+$results = $query->select('users')->all();
 ```
 ```sql
 SELECT * FROM `users`;
 ```
-- Select rows with a condition
+- Select a row with a condition
 ```php
-$query->get('users', [['id', '=', 1]]);
+$results = $query->select('users')->where([['id', '=', 10]])->one();
 ```
 ```sql
-SELECT * FROM `users` WHERE `id` = 1;
+SELECT * FROM `users` WHERE `id` = 10;
 ```
 - Select rows with two conditions
 ```php
-$query->get('users', [
+$results = $query->select('users')->where([
   ['id', '>', 1],
   'and',
   ['group_id', '=', 2],
-]);
+])->all();
 ```
 ```sql
 SELECT * FROM `users` WHERE (`id` > 1) AND (`group_id` = 2);
 ```
+- Select a row with a `LIKE` and `NOT LIKE` condition
+```php
+$results = $query->select('users')->like(['name', '%John%'])->all();
+// or
+$results = $query->select('users')->where([['name', 'LIKE', '%John%']])->all();
+```
+```sql
+SELECT * FROM `users` WHERE (`name` LIKE '%John%');
+```
+```php
+$results = $query->select('users')->notLike(['name', '%John%'])->all();
+// or
+$results = $query->select('users')->where([['name', 'NOT LIKE', '%John%']])->all();
+```
+```sql
+SELECT * FROM `users` WHERE (`name` NOT LIKE '%John%');
+```
+- Select rows with `OFFSET` and `LIMIT`
+```php
+$results = $query->select('posts')
+      ->where([['user_id', '=', 3]])
+      ->offset(14)
+      ->limit(7)
+      ->all();
+```
+```sql
+SELECT * FROM `posts` WHERE (`user_id` = 3) OFFSET 14 LIMIT 7;
+```
 - Select custom fields with additional SQL
-1.
+1. `COUNT()`
 ```php
-$query->getFields('users', ['count' => 'COUNT(id)']);
+$results = $query->select('users', ['counter' => 'COUNT(*)'])->one();
+// or
+$results = $query->count('users')->one();
 ```
 ```sql
-SELECT COUNT(id) AS `count` FROM `users`;
+SELECT COUNT(*) AS `counter` FROM `users`;
 ```
-2.
+2. `ORDER BY`
 ```php
-$query->getFields('posts', ['id', 'category', 'title'], [['views', '>=', 1000]], 'GROUP BY `category`');
+$results = $query->select(['id', 'name'], ['b' => 'branches'])
+        ->where([['id', '>', 1], 'and', ['parent_id', '=', 1]])
+        ->orderBy('id', 'desc')
+        ->all();
 ```
 ```sql
-SELECT id, category, title FROM `posts` WHERE (`views` >= 1000) GROUP BY `category`;
-```
-- Inner join
+SELECT `branches` AS `b` FROM `id`, `name`
+WHERE (`id` > 1) AND (`parent_id` = 1) ORDER BY `id` DESC;
+``` 
+3. `GROUP BY` and `HAVING`
 ```php
-$query->join(
-  ['u' => 'users', 'groups'],
-  ['u.id', 'u.email', 'u.username', 'perms' => 'groups.permissions'],
-  ['u.group_id', '=', 'groups.id']
-);
+$results = $query->select('posts', ['id', 'category', 'title'])
+        ->where([['views', '>=', 1000]])
+        ->groupBy('category')
+        ->all();
 ```
 ```sql
-SELECT u.id, u.email, u.username, groups.permissions AS `perms`
-FROM `users` AS `u` INNER JOIN `groups` ON u.group_id = groups.id;
+SELECT `id`, `category`, `title` FROM `posts`
+WHERE (`views` >= 1000) GROUP BY `category`;
+```
+```php
+$groups = $query->select('orders', ['month_num' => 'MONTH(`created_at`)', 'total' => 'SUM(`total`)'])
+        ->where([['YEAR(`created_at`)', '=', 2020]])
+        ->groupBy('month_num')
+        ->having([['total', '>', 20000]])
+        ->all();
+```
+```sql
+SELECT MONTH(`created_at`) AS `month_num`, SUM(`total`) AS `total`
+FROM `orders` WHERE (YEAR(`created_at`) = 2020)
+GROUP BY `month_num` HAVING (`total` > 20000);
+```
+4. JOINs
+```php
+$results = $query->select(['u' => 'users'], [
+        'u.id',
+        'u.email',
+        'u.username',
+        'perms' => 'groups.permissions'
+    ])
+    ->join('groups', ['u.group_id', 'groups.id'])
+    ->limit(5)
+    ->all();
+```
+```sql
+SELECT `u`.`id`, `u`.`email`, `u`.`username`, `groups`.`permissions` AS `perms`
+FROM `users` AS `u`
+INNER JOIN `groups` ON `u`.`group_id` = `groups`.`id`
+LIMIT 5;
+```
+```php
+$results = $query->select(['cp' => 'cabs_printers'], [
+      'cp.id',
+      'cp.cab_id',
+      'cab_name' => 'cb.name',
+      'cp.printer_id',
+      'printer_name' => 'p.name',
+      'cartridge_type' => 'c.name',
+      'cp.comment'
+    ])
+    ->join(['cb' => 'cabs'], ['cp.cab_id', 'cb.id'])
+    ->join(['p' => 'printer_models'], ['cp.printer_id', 'p.id'])
+    ->join(['c' => 'cartridge_types'], 'p.cartridge_id=c.id')
+    ->where([['cp.cab_id', 'in', [11, 12, 13]], 'or', ['cp.cab_id', '=', 5], 'and', ['p.id', '>', 'c.id']])
+    ->all();
+```
+```sql
+SELECT `cabs_printers` AS `cp`
+FROM `cp`.`id`, `cp`.`cab_id`, `cb`.`name` AS `cab_name`, `cp`.`printer_id`,
+     `p`.`name` AS `printer_name`, `c`.`name` AS `cartridge_type`, `cp`.`comment`
+INNER JOIN `cabs` AS `cb` ON `cp`.`cab_id` = `cb`.`id`
+INNER JOIN `printer_models` AS `p` ON `cp`.`printer_id` = `p`.`id`
+INNER JOIN `cartridge_types` AS `c` ON p.cartridge_id=c.id
+WHERE (`cp`.`cab_id` IN (11,12,13)) OR (`cp`.`cab_id` = 5) AND (`p`.`id` > `c`.`id`)
 ```
 - Insert a row
 ```php
-$query->insert('groups', [
-  'name' => 'Moderator',
-  'permissions' => 'moderator'
-]);
+$new_id = $query->insert('groups', [
+    'name' => 'Moderator',
+    'permissions' => 'moderator'
+])->go();
 ```
 ```sql
 INSERT INTO `groups` (`name`, `permissions`) VALUES ('Moderator', 'moderator');
 ```
-- Update a row
+- Insert many rows
 ```php
-$query->update('users', 7, [
-  'username' => 'John Doe',
-  'status' => 'new status'
-], 'LIMIT 1');
+$query->insert('groups', [
+	['name', 'role'],
+	['Moderator', 'moderator'],
+	['Moderator2', 'moderator'],
+	['User', 'user'],
+	['User2', 'user'],
+])->go();
 ```
 ```sql
-UPDATE `users` SET `username` = 'John Doe', `status` = 'new status' WHERE `id` = 7 LIMIT 1;
+INSERT INTO `groups` (`name`, `role`)
+VALUES ('Moderator', 'moderator'),
+       ('Moderator2', 'moderator'),
+       ('User', 'user'),
+       ('User2', 'user');
+```
+- Update a row
+```php
+$query->update('users', [
+            'username' => 'John Doe',
+            'status' => 'new status'
+        ])
+        ->where([['id', '=', 7]])
+        ->limit()
+        ->go();
+```
+```sql
+UPDATE `users` SET `username` = 'John Doe', `status` = 'new status'
+WHERE `id` = 7 LIMIT 1;
+```
+- Update rows
+```php
+$query->update('posts', ['status' => 'published'])
+        ->where([['YEAR(`updated_at`)', '>', 2020]])
+        ->go();
+```
+```sql
+UPDATE `posts` SET `status` = 'published'
+WHERE (YEAR(`updated_at`) > 2020);
 ```
 - Delete a row
 ```php
-$query->delete('users', [['id', '=', 10]]);
+$query->delete('users')->where([['id', '=', 10]])->go();
 ```
 ```sql
 DELETE FROM `users` WHERE `id` = 10;
+```
+- Truncate a table
+```php
+$query->truncate('users')->go();
+```
+```sql
+TRUNCATE TABLE `users`;
+```
+- Drop a table
+```php
+$query->drop('temporary')->go();
+```
+```sql
+DROP TABLE IF EXISTS `temporary`;
 ```
