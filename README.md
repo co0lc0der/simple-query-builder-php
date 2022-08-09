@@ -8,42 +8,56 @@
 
 This is a small easy-to-use PHP component for working with a database by PDO. It provides some public methods to compose SQL queries and manipulate data. Each SQL query is prepared and safe. PDO (see `Connection` class) fetches data to _arrays_ by default. See `example/example.php` for examples. At present time the component supports MySQL and SQLite (file or memory).
 
-## Installation
+**PAY ATTENTION! v0.2 and v0.3+ are incompatible.**  
 
+## Installation
 The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
 
 Either run
-
 ```sh
 composer require co0lc0der/simple-query-builder
 ```
-
 or add
-
 ```json
 "co0lc0der/simple-query-builder": "*"
 ```
-
 to the require section of your `composer.json` file.
 
-
 ## How to use
-### 1. Edit `config.php` and set the parameters up. Choose DB driver, DB name etc. 
+### Main public methods:
+- `getSql()` return SQL query string which will be executed
+- `getParams()` return an array of parameters for a query
+- `getResult()` return query's results
+- `getCount()` return results' rows count
+- `getError()` return `true` if an error is had
+- `getErrorMessage()` return an error message if an error is had
+- `setError($message)` set `$error` to `true` and `$errorMessage`
+- `getFirst()` return the first item of results
+- `getLast()` return the last item of results
+- `reset()` reset state to default values except PDO property
+- `all()` execute SQL query and return all rows of result (`fetchAll()`)
+- `one()` execute SQL query and return the first row of result (`fetch()`)
+- `go()` this method is for non SELECT queries. it executes SQL query and return nothing (but return Last inserted row ID for INSERT method)
+- `query($sql, $params[], $fetch_type)` execute prepared `$sql` with `$params`. it can be used for custom queries
+- `count()` prepare a query with SQL `COUNT()` function
+- 'SQL' methods are presented in [Usage section](#usageexamples)
+
+### Edit `config.php` and set the parameters up. Choose DB driver, DB name etc. 
 ```php
 $config = require_once __DIR__ . '/config.php';
 ```
-### 2. Use composer autoloader
+### Use composer autoloader
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 
 use co0lc0der\QueryBuilder\Connection;
 use co0lc0der\QueryBuilder\QueryBuilder;
 ```
-### 3. Init `QueryBuilder` with `Connection::make()`.
+### Init `QueryBuilder` with `Connection::make()`.
 ```php
 $query = new QueryBuilder(Connection::make($config['database']));
 ```
-### 4. Usage examples.
+### Usage examples
 - Select all rows from a table
 ```php
 $results = $query->select('users')->all();
@@ -109,14 +123,15 @@ SELECT COUNT(*) AS `counter` FROM `users`;
 ```
 2. `ORDER BY`
 ```php
-$results = $query->select(['id', 'name'], ['b' => 'branches'])
-        ->where([['id', '>', 1], 'and', ['parent_id', '=', 1]])
-        ->orderBy('id', 'desc')
+$results = $query->select(['b' => 'branches'], ['b.id', 'b.name'])
+        ->where([['b.id', '>', 1], 'and', ['b.parent_id', '=', 1]])
+        ->orderBy('b.id', 'desc')
         ->all();
 ```
 ```sql
-SELECT `branches` AS `b` FROM `id`, `name`
-WHERE (`id` > 1) AND (`parent_id` = 1) ORDER BY `id` DESC;
+SELECT `b`.`id`, `b`.`name` FROM `branches` AS `b`
+WHERE (`b`.`id` > 1) AND (`b`.`parent_id` = 1)
+ORDER BY `b`.`id` DESC;
 ``` 
 3. `GROUP BY` and `HAVING`
 ```php
@@ -141,7 +156,7 @@ SELECT MONTH(`created_at`) AS `month_num`, SUM(`total`) AS `total`
 FROM `orders` WHERE (YEAR(`created_at`) = 2020)
 GROUP BY `month_num` HAVING (`total` > 20000);
 ```
-4. JOINs
+4. `JOIN`. Support `INNER`, `LEFT OUTER`, `RIGHT OUTER`, `FULL OUTER` and `CROSS` joins (`INNER` is by default)
 ```php
 $results = $query->select(['u' => 'users'], [
         'u.id',
@@ -176,9 +191,9 @@ $results = $query->select(['cp' => 'cabs_printers'], [
     ->all();
 ```
 ```sql
-SELECT `cabs_printers` AS `cp`
-FROM `cp`.`id`, `cp`.`cab_id`, `cb`.`name` AS `cab_name`, `cp`.`printer_id`,
-     `p`.`name` AS `printer_name`, `c`.`name` AS `cartridge_type`, `cp`.`comment`
+SELECT `cp`.`id`, `cp`.`cab_id`, `cb`.`name` AS `cab_name`, `cp`.`printer_id`,
+       `p`.`name` AS `printer_name`, `c`.`name` AS `cartridge_type`, `cp`.`comment`
+FROM `cabs_printers` AS `cp`
 INNER JOIN `cabs` AS `cb` ON `cp`.`cab_id` = `cb`.`id`
 INNER JOIN `printer_models` AS `p` ON `cp`.`printer_id` = `p`.`id`
 INNER JOIN `cartridge_types` AS `c` ON p.cartridge_id=c.id
@@ -237,10 +252,22 @@ WHERE (YEAR(`updated_at`) > 2020);
 ```
 - Delete a row
 ```php
-$query->delete('users')->where([['id', '=', 10]])->go();
+$query->delete('users')
+  ->where([['name', '=', 'John']])
+  ->limit()
+  ->go();
 ```
 ```sql
-DELETE FROM `users` WHERE `id` = 10;
+DELETE FROM `users` WHERE `name` = 'John' LIMIT 1;
+```
+- Delete rows
+```php
+$query->delete('comments')
+  ->where([['user_id', '=', 10]])
+  ->go();
+```
+```sql
+DELETE FROM `comments` WHERE `user_id` = 10;
 ```
 - Truncate a table
 ```php
