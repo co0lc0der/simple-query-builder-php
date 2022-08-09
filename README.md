@@ -1,9 +1,9 @@
 # QueryBuilder php component
 
-[![Latest Version](https://img.shields.io/github/release/co0lc0der/QueryBuilder-component?style=flat-square)](https://github.com/co0lc0der/QueryBuilder-component/release)
-![GitHub repo size](https://img.shields.io/github/repo-size/co0lc0der/QueryBuilder-component?color=orange&label=size&style=flat-square)
+[![Latest Version](https://img.shields.io/github/release/co0lc0der/simple-query-builder-php?style=flat-square)](https://github.com/co0lc0der/simple-query-builder-php/release)
+![GitHub repo size](https://img.shields.io/github/repo-size/co0lc0der/simple-query-builder-php?color=orange&label=size&style=flat-square)
 [![Packagist Downloads](https://img.shields.io/packagist/dt/co0lc0der/simple-query-builder?color=yellow&style=flat-square)](https://packagist.org/packages/co0lc0der/simple-query-builder)
-[![GitHub license](https://img.shields.io/github/license/co0lc0der/QueryBuilder-component?style=flat-square)](https://github.com/co0lc0der/QueryBuilder-component/blob/main/LICENSE.md)
+[![GitHub license](https://img.shields.io/github/license/co0lc0der/simple-query-builder-php?style=flat-square)](https://github.com/co0lc0der/simple-query-builder-php/blob/main/LICENSE.md)
 ![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/co0lc0der/simple-query-builder?color=8993be&style=flat-square)
 
 This is a small easy-to-use PHP component for working with a database by PDO. It provides some public methods to compose SQL queries and manipulate data. Each SQL query is prepared and safe. PDO (see `Connection` class) fetches data to _arrays_ by default. See `example/example.php` for examples. At present time the component supports MySQL and SQLite (file or memory).
@@ -24,25 +24,26 @@ or add
 to the require section of your `composer.json` file.
 
 ## How to use
-### Main public methods:
-- `getSql()` return SQL query string which will be executed
-- `getParams()` return an array of parameters for a query
-- `getResult()` return query's results
-- `getCount()` return results' rows count
-- `getError()` return `true` if an error is had
-- `getErrorMessage()` return an error message if an error is had
-- `setError($message)` set `$error` to `true` and `$errorMessage`
-- `getFirst()` return the first item of results
-- `getLast()` return the last item of results
-- `reset()` reset state to default values except PDO property
-- `all()` execute SQL query and return all rows of result (`fetchAll()`)
-- `one()` execute SQL query and return the first row of result (`fetch()`)
-- `go()` this method is for non SELECT queries. it executes SQL query and return nothing (but return Last inserted row ID for INSERT method)
-- `query($sql, $params[], $fetch_type)` execute prepared `$sql` with `$params`. it can be used for custom queries
-- `count()` prepare a query with SQL `COUNT()` function
+### Main public methods
+- `getSql()` returns SQL query string which will be executed
+- `getParams()` returns an array of parameters for a query
+- `getResult()` returns query's results
+- `getCount()` returns results' rows count
+- `getError()` returns `true` if an error is had
+- `getErrorMessage()` returns an error message if an error is had
+- `setError($message)` sets `$error` to `true` and `$errorMessage`
+- `getFirst()` returns the first item of results
+- `getLast()` returns the last item of results
+- `reset()` resets state to default values (except PDO property)
+- `all()` executes SQL query and return all rows of result (`fetchAll()`)
+- `one()` executes SQL query and return the first row of result (`fetch()`)
+- `column($columnName)` executes SQL query and return needed column of result
+- `go()` this method is for non `SELECT` queries. it executes SQL query and return nothing (but returns the last inserted row ID for `INSERT` method)
+- `count()` prepares a query with SQL `COUNT()` function
+- `query($sql, $params[], $fetch_type)` executes prepared `$sql` with `$params`. it can be used for custom queries
 - 'SQL' methods are presented in [Usage section](#usage-examples)
 
-### Edit `config.php` and set the parameters up. Choose DB driver, DB name etc. 
+### Edit `config.php` and set the parameters up. Choose DB driver, DB name etc
 ```php
 $config = require_once __DIR__ . '/config.php';
 ```
@@ -53,7 +54,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use co0lc0der\QueryBuilder\Connection;
 use co0lc0der\QueryBuilder\QueryBuilder;
 ```
-### Init `QueryBuilder` with `Connection::make()`.
+### Init `QueryBuilder` with `Connection::make()`
 ```php
 $query = new QueryBuilder(Connection::make($config['database']));
 ```
@@ -156,7 +157,7 @@ SELECT MONTH(`created_at`) AS `month_num`, SUM(`total`) AS `total`
 FROM `orders` WHERE (YEAR(`created_at`) = 2020)
 GROUP BY `month_num` HAVING (`total` > 20000);
 ```
-4. `JOIN`. Support `INNER`, `LEFT OUTER`, `RIGHT OUTER`, `FULL OUTER` and `CROSS` joins (`INNER` is by default)
+4. `JOIN`. Supports `INNER`, `LEFT OUTER`, `RIGHT OUTER`, `FULL OUTER` and `CROSS` joins (`INNER` is by default)
 ```php
 $results = $query->select(['u' => 'users'], [
         'u.id',
