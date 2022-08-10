@@ -4,11 +4,14 @@ namespace co0lc0der\QueryBuilder;
 use PDO;
 use PDOException;
 
+/**
+ * class Connection
+ */
 class Connection
 {
 	/**
 	 * @param array $config
-	 * @return false|PDO|void
+	 * @return false|PDO
 	 */
 	public static function make(array $config) {
 		try {
