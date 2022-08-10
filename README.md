@@ -6,7 +6,7 @@
 [![GitHub license](https://img.shields.io/github/license/co0lc0der/simple-query-builder-php?style=flat-square)](https://github.com/co0lc0der/simple-query-builder-php/blob/main/LICENSE.md)
 ![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/co0lc0der/simple-query-builder?color=8993be&style=flat-square)
 
-This is a small easy-to-use PHP component for working with a database by PDO. It provides some public methods to compose SQL queries and manipulate data. Each SQL query is prepared and safe. PDO (see `Connection` class) fetches data to _arrays_ by default. See `example/example.php` for examples. At present time the component supports MySQL and SQLite (file or memory).
+This is a small easy-to-use PHP component for working with a database by PDO. It provides some public methods to compose SQL queries and manipulate data. Each SQL query is prepared and safe. PDO (see `Connection` class) fetches data to _arrays_ by default. At present time the component supports MySQL and SQLite (file or memory).
 
 **PAY ATTENTION! v0.2 and v0.3+ are incompatible.**  
 
