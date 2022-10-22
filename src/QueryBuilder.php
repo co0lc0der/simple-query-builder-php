@@ -222,6 +222,34 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string|array $fields
+	 * @return string
+	 */
+	private function prepareFieldList($fields = ''): string
+	{
+		$result = '';
+
+		if (empty($fields)) {
+			$this->setError('Empty $fields in ' . __METHOD__);
+			return $result;
+		}
+
+		if (is_string($fields)) {
+			$result = $this->prepareField($fields);
+		} elseif (is_array($fields)) {
+			$new_fields = [];
+
+			foreach ($fields as $field) {
+				$new_fields[] = $this->prepareField($field);
+			}
+
+			$result = implode(', ', $new_fields);
+		}
+
+		return $result;
+	}
+
+	/**
 	 * @param array|string $items
 	 * @param bool $asArray
 	 * @return array|string
