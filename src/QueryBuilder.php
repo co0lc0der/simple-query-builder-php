@@ -196,6 +196,32 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string $field
+	 * @return string
+	 */
+	private function prepareField(string $field = ''): string
+	{
+		if (empty($field)) {
+			$this->setError('Empty $field in ' . __METHOD__);
+			return '';
+		}
+
+		if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, '*') !== false) {
+			if (strpos($field, ' AS ') !== false) {
+				$field = str_replace(' AS ', ' AS `', $field);
+				return "{$field}`";
+			} else {
+				return $field;
+			}
+		} else{
+			$field = str_replace('.', '`.`', $field);
+			$field = str_replace(' AS ', '` AS `', $field);
+		}
+
+		return "`{$field}`";
+	}
+
+	/**
 	 * @param array|string $items
 	 * @param bool $asArray
 	 * @return array|string
