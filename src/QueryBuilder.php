@@ -518,24 +518,36 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param string $field
+	 * @param string|array $field
 	 * @param string $sort
 	 * @return $this
 	 */
-	public function orderBy(string $field = '', string $sort = 'ASC'): QueryBuilder
+	public function orderBy($field = '', string $sort = ''): QueryBuilder
 	{
-		if (empty($field) || empty($sort)) {
-			$this->setError('Empty $field or $sort in ' . __METHOD__);
+		if (empty($field)) {
+			$this->setError('Empty $field in ' . __METHOD__);
 			return $this;
 		}
 
-		$sort = strtoupper($sort);
-		$field = str_replace('.', '`.`', $field);
+		if (is_string($field)) {
+			$prepared_field = $this->prepareSorting($field, $sort);
+			$field = $prepared_field[0];
+			$sort = $prepared_field[1];
 
-		if (in_array($sort, self::SORT_TYPES)) {
-			$this->sql .= " ORDER BY `{$field}` {$sort}";
-		} else {
-			$this->sql .= " ORDER BY `{$field}`";
+			if (in_array($sort, self::SORT_TYPES)) {
+				$this->sql .= " ORDER BY `{$field}` {$sort}";
+			} else {
+				$this->sql .= " ORDER BY `{$field}`";
+			}
+		} elseif (is_array($field)) {
+			$new_list = [];
+
+			foreach ($field as $item) {
+				$new_item = $this->prepareSorting($item);
+				$new_list[] = "{$new_item[0]} {$new_item[1]}";
+			}
+
+			$this->sql .= ' ORDER BY ' . implode(', ', $new_list);
 		}
 
 		return $this;
