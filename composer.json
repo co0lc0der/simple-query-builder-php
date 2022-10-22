@@ -3,7 +3,7 @@
     "description": "A small easy-to-use php component for working with a database by PDO. It provides some public methods to manipulate data. Each SQL query is prepared and safe.",
     "type": "library",
     "require": {
-        "php": ">=7.3",
+        "php": ">=7.4",
         "ext-pdo": "*"
     },
     "license": "MIT",
