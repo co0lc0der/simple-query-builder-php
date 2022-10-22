@@ -582,18 +582,17 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param string $field
+	 * @param string|array $field
 	 * @return $this
 	 */
-	public function groupBy(string $field = ''): QueryBuilder
+	public function groupBy($field = ''): QueryBuilder
 	{
 		if (empty($field)) {
 			$this->setError('Empty $field in ' . __METHOD__);
 			return $this;
 		}
 
-		$field = str_replace('.', '`.`', $field);
-		$this->sql .= " GROUP BY `{$field}`";
+		$this->sql .= " GROUP BY {$this->prepareFieldList($field)}";
 
 		return $this;
 	}
