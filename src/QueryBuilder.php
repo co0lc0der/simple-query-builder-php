@@ -125,9 +125,9 @@ class QueryBuilder
 	}
 
 	/**
-	 * @return void
+	 * @return bool
 	 */
-	public function reset()
+	public function reset(): bool
 	{
 		$this->sql = '';
 		$this->params = [];
@@ -135,6 +135,8 @@ class QueryBuilder
 		$this->result = [];
 		$this->count = -1;
 		$this->setError();
+
+		return true;
 	}
 
 	/**
