@@ -317,6 +317,26 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string $field
+	 * @param string $sort
+	 * @return array
+	 */
+	private function prepareSorting(string $field = '', string $sort = ''): array
+	{
+		if (strpos($field, ' ') !== false) {
+			$splitted = explode(' ', $field);
+      $field = $splitted[0];
+      $sort = $splitted[1];
+		}
+
+    $field = $this->prepareField($field);
+
+		$sort =  ($sort == '') ? 'ASC' : strtoupper($sort);
+
+    return [$field, $sort];
+	}
+
+	/**
 	 * @param string $sql
 	 * @param array $params
 	 * @param bool $one
