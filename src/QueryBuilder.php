@@ -198,6 +198,15 @@ class QueryBuilder
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function exists(): bool
+	{
+		$result = $this->one();
+		return $this->count > 0;
+	}
+
+	/**
 	 * @param string $field
 	 * @return string
 	 */
