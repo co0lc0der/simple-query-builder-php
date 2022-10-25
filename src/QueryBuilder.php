@@ -264,20 +264,19 @@ class QueryBuilder
 		}
 
 		$sql = [];
+
 		if (is_string($items)) {
 			$sql[] = $items;
 		} else if (is_array($items)) {
 			foreach ($items as $alias => $item) {
-				$new_item = str_replace('.', '`.`', $item);
-				if (strpos($item, '(') !== false || strpos($item, ')') !== false) {
-					$sql[] = is_numeric($alias) ? "{$new_item}" : "{$new_item} AS `{$alias}`";
-				} else {
-					$sql[] = is_numeric($alias) ? "`{$new_item}`" : "`{$new_item}` AS `{$alias}`";
-				}
+				$sql[] = is_numeric($alias) ? "{$item}" : "{$item} AS {$alias}";
 			}
+		} else {
+			$this->setError('Incorrect type of items in ' . __METHOD__);
+			return '';
 		}
 
-		return $asArray ? $sql : implode(', ', $sql);
+		return $asArray ? $sql : $this->prepareFieldList($sql);
 	}
 
 	/**
