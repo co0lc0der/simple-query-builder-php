@@ -304,38 +304,48 @@ class QueryBuilder
 
 		if (is_string($where)) {
 			$sql .= $where;
-		} else {
+		} else if (is_array($where)) {
 			foreach ($where as $key => $cond):
 				if (is_array($cond)) {
-					if (count($cond) === 3) {
-						$field = str_replace('.', '`.`', $cond[0]);
+					if (count($cond) === 2) {
+						$field = $this->prepareField($cond[0]);
+						$value = $cond[1];
+						if (is_array($value)) {
+							$operator = 'IN';
+							$values = rtrim(str_repeat("?,", count($value)), ',');
+							$sql .= "({$field} {$operator} ({$values}))";
+
+							foreach ($value as $item) {
+								$result['values'][] = $item;
+							}
+						} else {
+							$operator = '=';
+							$sql .= "({$field} {$operator} ?)";
+							$result['values'][] = $value;
+						}
+					} else if (count($cond) === 3) {
+						$field = $this->prepareField($cond[0]);
 						$operator = strtoupper($cond[1]);
 						$value = $cond[2];
+
 						if (!is_numeric($value) && is_string($value)) {
-							$value = str_replace('.', '`.`', $value);
+							$value = $this->prepareField($value);
 						}
 
 						if (in_array($operator, self::OPERATORS)) {
 							if ($operator == 'IN' && is_array($value)) {
 								$values = rtrim(str_repeat("?,", count($value)), ',');
-                $sql .= "(`{$field}` {$operator} ({$values}))";
-                foreach ($value as $item) {
+                $sql .= "({$field} {$operator} ({$values}))";
+
+								foreach ($value as $item) {
 	                $result['values'][] = $item;
                 }
 							} else {
 								if (is_numeric($value) || (is_string($value) && strpos($value, '.') === false)) {
-									if (strpos($field, '(') !== false || strpos($item, ')') !== false) {
-										$sql .= "({$field} {$operator} ?)";
-									} else {
-										$sql .= "(`{$field}` {$operator} ?)";
-									}
+									$sql .= "({$field} {$operator} ?)";
 									$result['values'][] = $value;
 								} else {
-									if (strpos($field, '(') !== false || strpos($item, ')') !== false) {
-										$sql .= "({$field} {$operator} `{$value}`)";
-									} else {
-										$sql .= "(`{$field}` {$operator} `{$value}`)";
-									}
+									$sql .= "({$field} {$operator} {$value})";
 								}
 							}
 						}
@@ -347,6 +357,9 @@ class QueryBuilder
 					}
 				}
 			endforeach;
+		} else {
+			$this->setError('Incorrect type of $where in ' . __METHOD__);
+			return $result;
 		}
 
 		$result['sql'] = $sql;
