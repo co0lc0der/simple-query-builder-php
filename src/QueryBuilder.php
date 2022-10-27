@@ -659,10 +659,8 @@ class QueryBuilder
 			return $this;
 		}
 
-		if (is_array($table)) {
-			$table = "`{$this->prepareAliases($table)}`";
-		} else if (is_string($table)) {
-			$table = "`{$table}`";
+		if (is_array($table) || is_string($table)) {
+			$table = $this->prepareAliases($table);
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
 			return $this;
@@ -670,17 +668,13 @@ class QueryBuilder
 
 		$this->reset();
 
-		if (isset($fields[0]) && !is_array($fields[0])) {
-			$values = rtrim(str_repeat("?,", count($fields)), ',');
-			$this->sql = "INSERT INTO {$table} (`" . implode('`, `', array_keys($fields)) . "`) VALUES ({$values})";
-			$this->params = array_values($fields);
-		} else {
+		if (isset($fields[0]) && is_array($fields[0])) {
 			$names = array_shift($fields);
 			$value = rtrim(str_repeat("?,", count($names)), ',');
 			$values = rtrim(str_repeat("({$value}),", count($fields)), ',');
-			$this->sql = "INSERT INTO {$table} (`" . implode('`, `', $names) . "`) VALUES {$values}";
-			$params = [];
+			$this->sql = "INSERT INTO {$table} (" . $this->prepareFieldList($names) . ") VALUES {$values}";
 
+			$params = [];
 			foreach ($fields as $item) {
 				if (is_array($item)) {
 					$params = array_merge($params, $item);
@@ -688,6 +682,10 @@ class QueryBuilder
 			}
 
 			$this->params = $params;
+		} else {
+			$values = rtrim(str_repeat("?,", count($fields)), ',');
+			$this->sql = "INSERT INTO {$table} (" . $this->prepareFieldList(array_keys($fields)) . ") VALUES ({$values})";
+			$this->params = array_values($fields);
 		}
 
 		return $this;
