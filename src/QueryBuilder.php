@@ -717,10 +717,8 @@ class QueryBuilder
 			return $this;
 		}
 
-		if (is_array($table)) {
-			$table = "`{$this->prepareAliases($table)}`";
-		} else if (is_string($table)) {
-			$table = "`{$table}`";
+		if (is_array($table) or is_string($table)) {
+			$table = $this->prepareAliases($table);
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
@@ -730,8 +728,7 @@ class QueryBuilder
 
 		$sets = '';
 		foreach ($fields as $key => $field) {
-			$new_key = str_replace('.', '`.`', $key);
-			$sets .= " `{$new_key}` = ?,";
+			$sets .= " {$this->prepareField($key)} = ?,";
 		}
 		$sets = rtrim($sets, ',');
 
