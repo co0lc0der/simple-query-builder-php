@@ -181,7 +181,7 @@ class QueryBuilder
 		if (is_array($table) || is_string($table)) {
 			$this->select($table, (empty($field) ? 'COUNT(*) AS counter' : "COUNT({$field}) AS counter"));
 		} else {
-			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. Table must be a string or an array');
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
 			return $this;
 		}
 
@@ -294,7 +294,7 @@ class QueryBuilder
 				$sql[] = is_numeric($alias) ? $item : "{$item} AS {$alias}";
 			}
 		} else {
-			$this->setError('Incorrect type of items in ' . __METHOD__ . '. Items must be a string or an array');
+			$this->setError('Incorrect type of items in ' . __METHOD__ . '. $items must be a string or an array');
 			return '';
 		}
 
@@ -466,14 +466,14 @@ class QueryBuilder
 		if (is_array($fields) || is_string($fields)) {
 			$this->sql = "SELECT {$this->prepareAliases($fields)}";
 		} else {
-			$this->setError('Incorrect type of $fields in ' . __METHOD__ . '. Fields must be a string or an array');
+			$this->setError('Incorrect type of $fields in ' . __METHOD__ . '. $fields must be a string or an array');
 			return $this;
 		}
 
 		if (is_array($table) || is_string($table)) {
 			$this->sql .= " FROM {$this->prepareAliases($table)}";
 		} else {
-			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. Table must be a string or an array');
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
 		}
 
 		return $this;
@@ -650,7 +650,7 @@ class QueryBuilder
 		} else if (is_string($table)) {
 			$table = "`{$table}`";
 		} else {
-			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
 		}
 
@@ -676,7 +676,7 @@ class QueryBuilder
 		if (is_array($table) || is_string($table)) {
 			$table = $this->prepareAliases($table);
 		} else {
-			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
 		}
 
@@ -722,7 +722,7 @@ class QueryBuilder
 		} else if (is_string($table)) {
 			$table = "`{$table}`";
 		} else {
-			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
 		}
 
@@ -765,7 +765,7 @@ class QueryBuilder
 		} else if (is_string($table)) {
 			$this->sql .= " {$join_type} JOIN `{$table}`";
 		} else {
-			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be String or Array.');
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
 		}
 
