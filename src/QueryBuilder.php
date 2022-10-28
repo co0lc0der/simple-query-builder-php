@@ -208,6 +208,17 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string|int $key
+	 * @param string|int$column
+	 * @return array
+	 */
+	public function pluck($key = 0, $column = 1): array
+	{
+		$this->query();
+		return array_column($this->result, $column, $key);
+	}
+
+	/**
 	 * @param string $field
 	 * @return string
 	 */
