@@ -741,6 +741,7 @@ class QueryBuilder
 	public function join($table, $on, string $join_type = 'INNER'): QueryBuilder
 	{
 		$join_type = strtoupper($join_type);
+
 		if (empty($join_type) || !in_array($join_type, self::JOIN_TYPES)) {
 			$this->setError('Empty $join_type or is not allowed in ' . __METHOD__);
 			return $this;
@@ -751,10 +752,8 @@ class QueryBuilder
 			return $this;
 		}
 
-		if (is_array($table)) {
+		if (is_array($table) || is_string($table)) {
 			$this->sql .= " {$join_type} JOIN {$this->prepareAliases($table)}";
-		} else if (is_string($table)) {
-			$this->sql .= " {$join_type} JOIN `{$table}`";
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
@@ -762,13 +761,12 @@ class QueryBuilder
 
 		if ($on) {
 			if (is_array($on)) {
-				$field1 = str_replace('.', '`.`', $on[0]);
-				$field1 = "`{$field1}`";
-				$field2 = str_replace('.', '`.`', $on[1]);
-				$field2 = "`{$field2}`";
-				$this->sql .= " ON {$field1} = {$field2}";
+				$this->sql .= " ON {$this->prepareField($on[0])} = {$this->prepareField($on[1])}";
 			} else if (is_string($on)) {
 				$this->sql .= " ON {$on}";
+			} else {
+				$this->setError('Incorrect type of $on in ' . __METHOD__ . '. $on must be a string or an array.');
+				return $this;
 			}
 		}
 
