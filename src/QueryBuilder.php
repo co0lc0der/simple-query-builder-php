@@ -450,16 +450,17 @@ class QueryBuilder
 
 		$this->reset();
 
-		if (is_array($fields)) {
+		if (is_array($fields) || is_string($fields)) {
 			$this->sql = "SELECT {$this->prepareAliases($fields)}";
-		} else if (is_string($fields)) {
-			$this->sql = "SELECT {$fields}";
+		} else {
+			$this->setError('Incorrect type of $fields in ' . __METHOD__ . '. Fields must be a string or an array');
+			return $this;
 		}
 
-		if (is_array($table)) {
+		if (is_array($table) || is_string($table)) {
 			$this->sql .= " FROM {$this->prepareAliases($table)}";
-		} else if (is_string($table)) {
-			$this->sql .= " FROM `{$table}`";
+		} else {
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. Table must be a string or an array');
 		}
 
 		return $this;
