@@ -278,13 +278,23 @@ class QueryBuilder
 		$sql = [];
 
 		if (is_string($items)) {
-			$sql[] = $items;
+			if (strpos($items, ',') !== false) {
+				if (strpos($items, ' as ') === false && strpos($items, ' AS ') === false) {
+					$items = str_replace(' ', '', $items);
+				}
+
+				if ($new_items = explode(',', $items)) {
+					$sql = $new_items;
+				}
+			} else {
+				$sql[] = $items;
+			}
 		} else if (is_array($items)) {
 			foreach ($items as $alias => $item) {
-				$sql[] = is_numeric($alias) ? "{$item}" : "{$item} AS {$alias}";
+				$sql[] = is_numeric($alias) ? $item : "{$item} AS {$alias}";
 			}
 		} else {
-			$this->setError('Incorrect type of items in ' . __METHOD__);
+			$this->setError('Incorrect type of items in ' . __METHOD__ . '. Items must be a string or an array');
 			return '';
 		}
 
