@@ -169,22 +169,23 @@ class QueryBuilder
 	/**
 	 * @param array|string $table
 	 * @param string $field
-	 * @return $this
+	 * @return string|$this
 	 */
-	public function count($table, string $field = ''): QueryBuilder
+	public function count($table, string $field = '')
 	{
 		if (empty($table)) {
 			$this->setError('Empty $table in ' . __METHOD__);
 			return $this;
 		}
 
-		if (empty($field)) {
-			$this->select($table, 'COUNT(*) AS `counter`');
+		if (is_array($table) || is_string($table)) {
+			$this->select($table, (empty($field) ? 'COUNT(*) AS counter' : "COUNT({$field}) AS counter"));
 		} else {
-			$this->select($table, "COUNT(`{$field}`) AS `counter`");
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. Table must be a string or an array');
+			return $this;
 		}
 
-		return $this;
+		return $this->column();
 	}
 
 	/**
