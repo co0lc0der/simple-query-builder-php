@@ -218,6 +218,8 @@ class QueryBuilder
 			return '';
 		}
 
+		$field = trim(str_replace(' as ', ' AS ', $field));
+
 		if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, '*') !== false) {
 			if (strpos($field, ' AS ') !== false) {
 				$field = str_replace(' AS ', ' AS `', $field);
