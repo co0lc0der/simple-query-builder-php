@@ -69,7 +69,7 @@ class QueryBuilder
 	/**
 	 * @return bool
 	 */
-	public function getError(): bool
+	public function hasError(): bool
 	{
 		return $this->error;
 	}
