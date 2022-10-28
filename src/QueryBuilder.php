@@ -341,10 +341,6 @@ class QueryBuilder
 						$operator = strtoupper($cond[1]);
 						$value = $cond[2];
 
-						if (!is_numeric($value) && is_string($value)) {
-							$value = $this->prepareField($value);
-						}
-
 						if (in_array($operator, self::OPERATORS)) {
 							if ($operator == 'IN' && is_array($value)) {
 								$values = rtrim(str_repeat("?,", count($value)), ',');
