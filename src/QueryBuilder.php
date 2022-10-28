@@ -588,9 +588,9 @@ class QueryBuilder
 			$sort = $prepared_field[1];
 
 			if (in_array($sort, self::SORT_TYPES)) {
-				$this->sql .= " ORDER BY `{$field}` {$sort}";
+				$this->sql .= " ORDER BY {$field} {$sort}";
 			} else {
-				$this->sql .= " ORDER BY `{$field}`";
+				$this->sql .= " ORDER BY {$field}";
 			}
 		} elseif (is_array($field)) {
 			$new_list = [];
