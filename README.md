@@ -10,6 +10,14 @@ This is a small easy-to-use PHP component for working with a database by PDO. It
 
 **PAY ATTENTION! v0.2 and v0.3+ are incompatible.**  
 
+## Contributing
+
+Bug reports and/or pull requests are welcome
+
+## License
+
+The package is available as open source under the terms of the [MIT license](https://github.com/co0lc0der/simple-query-builder-php/blob/main/LICENSE.md)
+
 ## Installation
 The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
 
@@ -21,7 +29,7 @@ or add
 ```json
 "co0lc0der/simple-query-builder": "*"
 ```
-to the require section of your `composer.json` file.
+to the `require section` of your `composer.json` file.
 
 ## How to use
 ### Main public methods
@@ -29,7 +37,7 @@ to the require section of your `composer.json` file.
 - `getParams()` returns an array of parameters for a query
 - `getResult()` returns query's results
 - `getCount()` returns results' rows count
-- `getError()` returns `true` if an error is had
+- `hasError()` returns `true` if an error is had
 - `getErrorMessage()` returns an error message if an error is had
 - `setError($message)` sets `$error` to `true` and `$errorMessage`
 - `getFirst()` returns the first item of results
@@ -38,8 +46,10 @@ to the require section of your `composer.json` file.
 - `all()` executes SQL query and return all rows of result (`fetchAll()`)
 - `one()` executes SQL query and return the first row of result (`fetch()`)
 - `column()` executes SQL query and return the first column of result (`fetchColumn()`)
+- `pluck($key_index, $col_index)` executes SQL query and returns an array (the key (usually ID) and the needed column of result), `key_index` is `0` and `col_index` is `1` by default
 - `go()` this method is for non `SELECT` queries. it executes SQL query and return nothing (but returns the last inserted row ID for `INSERT` method)
 - `count()` prepares a query with SQL `COUNT()` function
+- `exists()` returns `true` if SQL query result has a row
 - `query($sql, $params[], $fetch_type)` executes prepared `$sql` with `$params`. it can be used for custom queries
 - 'SQL' methods are presented in [Usage section](#usage-examples)
 
@@ -69,6 +79,8 @@ SELECT * FROM `users`;
 - Select a row with a condition
 ```php
 $results = $query->select('users')->where([['id', '=', 10]])->one();
+// or since 0.3.4
+$results = $query->select('users')->where([['id', 10]])->one();
 ```
 ```sql
 SELECT * FROM `users` WHERE `id` = 10;
@@ -79,6 +91,12 @@ $results = $query->select('users')->where([
   ['id', '>', 1],
   'and',
   ['group_id', '=', 2],
+])->all();
+// or since 0.3.4
+$results = $query->select('users')->where([
+  ['id', '>', 1],
+  'and',
+  ['group_id', 2],
 ])->all();
 ```
 ```sql
@@ -108,6 +126,12 @@ $results = $query->select('posts')
       ->offset(14)
       ->limit(7)
       ->all();
+// or since 0.3.4
+$results = $query->select('posts')
+      ->where([['user_id', 3]])
+      ->offset(14)
+      ->limit(7)
+      ->all();
 ```
 ```sql
 SELECT * FROM `posts` WHERE (`user_id` = 3) OFFSET 14 LIMIT 7;
@@ -127,6 +151,11 @@ SELECT COUNT(*) AS `counter` FROM `users`;
 $results = $query->select(['b' => 'branches'], ['b.id', 'b.name'])
         ->where([['b.id', '>', 1], 'and', ['b.parent_id', '=', 1]])
         ->orderBy('b.id', 'desc')
+        ->all();
+// or since 0.3.4
+$results = $query->select(['b' => 'branches'], ['b.id', 'b.name'])
+        ->where([['b.id', '>', 1], 'and', ['b.parent_id', 1]])
+        ->orderBy('b.id desc')
         ->all();
 ```
 ```sql
@@ -149,13 +178,19 @@ WHERE (`views` >= 1000) GROUP BY `category`;
 $groups = $query->select('orders', ['month_num' => 'MONTH(`created_at`)', 'total' => 'SUM(`total`)'])
         ->where([['YEAR(`created_at`)', '=', 2020]])
         ->groupBy('month_num')
-        ->having([['total', '>', 20000]])
+        ->having([['total', '=', 20000]])
+        ->all();
+// or since 0.3.4
+$groups = $query->select('orders', ['month_num' => 'MONTH(`created_at`)', 'total' => 'SUM(`total`)'])
+        ->where([['YEAR(`created_at`)', 2020]])
+        ->groupBy('month_num')
+        ->having([['total', 20000]])
         ->all();
 ```
 ```sql
 SELECT MONTH(`created_at`) AS `month_num`, SUM(`total`) AS `total`
 FROM `orders` WHERE (YEAR(`created_at`) = 2020)
-GROUP BY `month_num` HAVING (`total` > 20000);
+GROUP BY `month_num` HAVING (`total` = 20000);
 ```
 4. `JOIN`. Supports `INNER`, `LEFT OUTER`, `RIGHT OUTER`, `FULL OUTER` and `CROSS` joins (`INNER` is by default)
 ```php
@@ -200,6 +235,35 @@ INNER JOIN `printer_models` AS `p` ON `cp`.`printer_id` = `p`.`id`
 INNER JOIN `cartridge_types` AS `c` ON p.cartridge_id=c.id
 WHERE (`cp`.`cab_id` IN (11,12,13)) OR (`cp`.`cab_id` = 5) AND (`p`.`id` > `c`.`id`)
 ```
+```php
+// or since 0.3.4
+$results = $query->select(['cp' => 'cabs_printers'], [
+        'cp.id',
+        'cp.cab_id',
+        'cab_name' => 'cb.name',
+        'cp.printer_id',
+        'cartridge_id' => 'c.id',
+        'printer_name' => 'p.name',
+        'cartridge_type' => 'c.name',
+        'cp.comment'
+    ])
+    ->join(['cb' => 'cabs'], ['cp.cab_id', 'cb.id'])
+    ->join(['p' => 'printer_models'], ['cp.printer_id', 'p.id'])
+    ->join(['c' => 'cartridge_types'], ['p.cartridge_id', 'c.id'])
+    ->groupBy(['cp.printer_id', 'cartridge_id'])
+    ->orderBy(['cp.cab_id', 'cp.printer_id desc'])
+    ->all();
+```
+```sql
+SELECT `cp`.`id`, `cp`.`cab_id`, `cb`.`name` AS `cab_name`, `cp`.`printer_id`, `c`.`id` AS `cartridge_id`,
+    `p`.`name` AS `printer_name`, `c`.`name` AS `cartridge_type`, `cp`.`comment`
+FROM `cabs_printers` AS `cp`
+INNER JOIN `cabs` AS `cb` ON `cp`.`cab_id` = `cb`.`id`
+INNER JOIN `printer_models` AS `p` ON `cp`.`printer_id` = `p`.`id`
+INNER JOIN `cartridge_types` AS `c` ON `p`.`cartridge_id` = `c`.`id`
+GROUP BY `cp`.`printer_id`, `cartridge_id`
+ORDER BY `cp`.`cab_id` ASC, `cp`.`printer_id` DESC;
+```
 - Insert a row
 ```php
 $new_id = $query->insert('groups', [
@@ -236,6 +300,14 @@ $query->update('users', [
         ->where([['id', '=', 7]])
         ->limit()
         ->go();
+// or since 0.3.4
+$query->update('users', [
+            'username' => 'John Doe',
+            'status' => 'new status'
+        ])
+        ->where([['id', 7]])
+        ->limit()
+        ->go();
 ```
 ```sql
 UPDATE `users` SET `username` = 'John Doe', `status` = 'new status'
@@ -257,6 +329,11 @@ $query->delete('users')
   ->where([['name', '=', 'John']])
   ->limit()
   ->go();
+// or since 0.3.4
+$query->delete('users')
+  ->where([['name', 'John']])
+  ->limit()
+  ->go();
 ```
 ```sql
 DELETE FROM `users` WHERE `name` = 'John' LIMIT 1;
@@ -265,6 +342,10 @@ DELETE FROM `users` WHERE `name` = 'John' LIMIT 1;
 ```php
 $query->delete('comments')
   ->where([['user_id', '=', 10]])
+  ->go();
+// or since 0.3.4
+$query->delete('comments')
+  ->where([['user_id', 10]])
   ->go();
 ```
 ```sql
