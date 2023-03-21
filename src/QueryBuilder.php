@@ -330,7 +330,10 @@ class QueryBuilder
 	 */
 	private function prepareConditions($where): array
 	{
-		$result = ['sql' => '', 'values' => []];
+		$result = [
+			'sql' => '',
+			'values' => [],
+			];
 		$sql = '';
 
 		if (empty($where)) {
@@ -346,7 +349,14 @@ class QueryBuilder
 					if (count($cond) === 2) {
 						$field = $this->prepareField($cond[0]);
 						$value = $cond[1];
-						if (is_array($value)) {
+
+						if (strtolower($value) == 'is null') {
+							$operator = 'IS NULL';
+							$sql .= "({$field} {$operator})";
+						} else if (strtolower($value) == 'is not null') {
+							$operator = 'IS NOT NULL';
+							$sql .= "({$field} {$operator})";
+						} else if (is_array($value)) {
 							$operator = 'IN';
 							$values = rtrim(str_repeat("?,", count($value)), ',');
 							$sql .= "({$field} {$operator} ({$values}))";
