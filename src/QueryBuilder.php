@@ -592,17 +592,23 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param array|string $cond
+	 * @param array|string $field
+	 * @param string $value
 	 * @return $this
 	 */
-	public function notLike($cond = []): QueryBuilder
+	public function notLike($field, string $value = ''): QueryBuilder
 	{
-		if ($cond) {
-			if (is_string($cond)) {
-				$this->where($cond);
-			} else if (is_array($cond)) {
-				$this->where([[$cond[0], 'NOT LIKE', $cond[1]]]);
-			}
+		if (empty($field)) {
+			$this->setError('Empty $field in ' . __METHOD__);
+			return $this;
+		}
+
+		if (is_string($field) && !empty($field) && is_string($value) && !empty($value)) {
+			$this->where([[$field, 'NOT LIKE', $value]]);
+		} else if (is_string($field) && empty($value)) {
+			$this->where($field);
+		} else if (is_array($field)) {
+			$this->where([[$field[0], 'NOT LIKE', $field[1]]]);
 		}
 
 		return $this;
