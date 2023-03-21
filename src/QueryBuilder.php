@@ -592,6 +592,43 @@ class QueryBuilder
 	}
 
 	/**
+	 * @param string $field
+	 * @return $this
+	 */
+	public function isNull(string $field) {
+		if (empty($field)) {
+			$this->setError('Empty $field in ' . __METHOD__);
+			return $this;
+		}
+
+		$this->where([[$field, 'IS NULL']]);
+		return $this;
+	}
+
+	/**
+	 * @param string $field
+	 * @return $this
+	 */
+	public function isNotNull(string $field) {
+		if (empty($field)) {
+			$this->setError('Empty $field in ' . __METHOD__);
+			return $this;
+		}
+
+		$this->where([[$field, 'IS NOT NULL']]);
+		return $this;
+	}
+
+	/**
+	 * @param string $field
+	 * @return $this
+	 */
+	public function notNull(string $field) {
+		$this->isNotNull($field);
+		return $this;
+	}
+
+	/**
 	 * @param int $limit
 	 * @return $this
 	 */
