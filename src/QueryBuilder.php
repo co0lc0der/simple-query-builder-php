@@ -212,12 +212,17 @@ class QueryBuilder
 	}
 
 	/**
-	 * @return array|string
+	 * @param int|string $column
+	 * @return $this|string|array
 	 */
-	public function column()
+	public function column($column = 0)
 	{
-		$this->query('', [], self::FETCH_COLUMN);
+		if (is_integer($column) or is_string($column)) {
+			$this->setError('Incorrect type of $column in ' . __METHOD__);
+			return $this;
+		}
 
+		$this->query('', [], $column, self::FETCH_COLUMN);
 		return $this->result;
 	}
 
@@ -232,11 +237,16 @@ class QueryBuilder
 
 	/**
 	 * @param string|int $key
-	 * @param string|int$column
-	 * @return array
+	 * @param string|int $column
+	 * @return array|QueryBuilder
 	 */
 	public function pluck($key = 0, $column = 1): array
 	{
+		if ((is_integer($key) or is_integer($column)) or (is_string($key) or is_string($column))) {
+			$this->setError('Incorrect type of $key or $column in ' . __METHOD__);
+			return $this;
+		}
+
 		$this->query();
 		return array_column($this->result, $column, $key);
 	}
