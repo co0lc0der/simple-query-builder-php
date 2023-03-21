@@ -45,11 +45,11 @@ to the `require section` of your `composer.json` file.
 - `reset()` resets state to default values (except PDO property)
 - `all()` executes SQL query and return all rows of result (`fetchAll()`)
 - `one()` executes SQL query and return the first row of result (`fetch()`)
-- `column()` executes SQL query and return the first column of result (`fetchColumn()`)
-- `pluck($key_index, $col_index)` executes SQL query and returns an array (the key (usually ID) and the needed column of result), `key_index` is `0` and `col_index` is `1` by default
+- `column($col)` executes SQL query and returns the needed column of result by its name, `col` is `'id'` by default
+- `pluck($key, $col)` executes SQL query and returns an array (the key (usually ID) and the needed column of result) by their names, `key` is `id` and `col` is `''` by default
 - `go()` this method is for non `SELECT` queries. it executes SQL query and return nothing (but returns the last inserted row ID for `INSERT` method)
 - `count()` prepares a query with SQL `COUNT(*)` function and executes it
-- `exists()` returns `true` if SQL query result has a row
+- `exists()` returns `true` if SQL query result has a row and `false` if it hasn't
 - `query($sql, $params[], $fetch_type)` executes prepared `$sql` with `$params`. it can be used for custom queries
 - 'SQL' methods are presented in [Usage section](#usage-examples)
 
@@ -66,7 +66,10 @@ use co0lc0der\QueryBuilder\QueryBuilder;
 ```
 ### Init `QueryBuilder` with `Connection::make()`
 ```php
-$query = new QueryBuilder(Connection::make($config['database']));
+$query = new QueryBuilder(Connection::make($config['database'])); // $printErrors = false
+
+// for printing errors (since 0.3.6)
+$query = new QueryBuilder(Connection::make($config['database']), true)
 ```
 ### Usage examples
 - Select all rows from a table
@@ -107,6 +110,8 @@ SELECT * FROM `users` WHERE (`id` > 1) AND (`group_id` = 2);
 $results = $query->select('users')->like(['name', '%John%'])->all();
 // or
 $results = $query->select('users')->where([['name', 'LIKE', '%John%']])->all();
+// or since 0.3.6
+$results = $query->select('users')->like('name', '%John%')->all();
 ```
 ```sql
 SELECT * FROM `users` WHERE (`name` LIKE '%John%');
@@ -115,6 +120,8 @@ SELECT * FROM `users` WHERE (`name` LIKE '%John%');
 $results = $query->select('users')->notLike(['name', '%John%'])->all();
 // or
 $results = $query->select('users')->where([['name', 'NOT LIKE', '%John%']])->all();
+// or since 0.3.6
+$results = $query->select('users')->notLike('name', '%John%')->all();
 ```
 ```sql
 SELECT * FROM `users` WHERE (`name` NOT LIKE '%John%');
