@@ -176,7 +176,7 @@ class QueryBuilder
 	 */
 	public function one(): array
 	{
-		$this->query($this->sql, $this->params, self::FETCH_ONE);
+		$this->query($this->sql, $this->params, 0, self::FETCH_ONE);
 		return $this->result;
 	}
 
@@ -185,7 +185,7 @@ class QueryBuilder
 	 */
 	public function go(): int
 	{
-		$this->query($this->sql, $this->params, self::NO_FETCH);
+		$this->query($this->sql, $this->params, 0, self::NO_FETCH);
 		return $this->pdo->lastInsertId();
 	}
 
@@ -443,10 +443,11 @@ class QueryBuilder
 	/**
 	 * @param string $sql
 	 * @param array $params
-	 * @param bool $one
+	 * @param int|string $column
+	 * @param int $fetch
 	 * @return $this
 	 */
-	public function query(string $sql = '', array $params = [], int $fetch = self::FETCH_ALL): QueryBuilder
+	public function query(string $sql = '', array $params = [], $column = 0, int $fetch = self::FETCH_ALL): QueryBuilder
 	{
 		$this->setError();
 
@@ -478,7 +479,7 @@ class QueryBuilder
 			} else if ($fetch === self::FETCH_ALL) {
 				$this->result = $this->query->fetchAll();
 			} else if ($fetch === self::FETCH_COLUMN) {
-				$this->result = $this->query->fetchColumn();
+				$this->result = $this->query->fetchColumn($column);
 			}
 
 			if (is_array($this->result)) {
