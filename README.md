@@ -8,7 +8,7 @@
 
 This is a small easy-to-use PHP component for working with a database by PDO. It provides some public methods to compose SQL queries and manipulate data. Each SQL query is prepared and safe. PDO (see `Connection` class) fetches data to _arrays_ by default. At present time the component supports MySQL and SQLite (file or memory).
 
-**PAY ATTENTION! v0.2 and v0.3+ are incompatible.**  
+**PAY ATTENTION! v0.2 and v0.3+ are incompatible.**
 
 ## Contributing
 
@@ -48,7 +48,7 @@ to the `require section` of your `composer.json` file.
 - `column()` executes SQL query and return the first column of result (`fetchColumn()`)
 - `pluck($key_index, $col_index)` executes SQL query and returns an array (the key (usually ID) and the needed column of result), `key_index` is `0` and `col_index` is `1` by default
 - `go()` this method is for non `SELECT` queries. it executes SQL query and return nothing (but returns the last inserted row ID for `INSERT` method)
-- `count()` prepares a query with SQL `COUNT()` function
+- `count()` prepares a query with SQL `COUNT(*)` function and executes it
 - `exists()` returns `true` if SQL query result has a row
 - `query($sql, $params[], $fetch_type)` executes prepared `$sql` with `$params`. it can be used for custom queries
 - 'SQL' methods are presented in [Usage section](#usage-examples)
@@ -118,6 +118,25 @@ $results = $query->select('users')->where([['name', 'NOT LIKE', '%John%']])->all
 ```
 ```sql
 SELECT * FROM `users` WHERE (`name` NOT LIKE '%John%');
+```
+- Select a row with a `IS NULL` and `IS NOT NULL` condition (since 0.3.5)
+```php
+$results = $query->select('users')->isNull('phone')->all();
+# or
+$results = $query->select('users')->where([['phone', 'is null']])->all();
+```
+```sql
+SELECT * FROM `users` WHERE (`phone` IS NULL);
+```
+```php
+$results = $query->select('customers')->isNotNull('address')->all();
+# or
+$results = $query->select('customers')->notNull('address')->all();
+# or
+$results = $query->select('customers')->where([['address', 'is not null']])->all();
+```
+```sql
+SELECT * FROM `customers` WHERE (`address` IS NOT NULL);
 ```
 - Select rows with `OFFSET` and `LIMIT`
 ```php
@@ -352,6 +371,8 @@ $query->delete('comments')
 DELETE FROM `comments` WHERE `user_id` = 10;
 ```
 - Truncate a table
+
+This method will be moved to another class
 ```php
 $query->truncate('users')->go();
 ```
@@ -359,6 +380,8 @@ $query->truncate('users')->go();
 TRUNCATE TABLE `users`;
 ```
 - Drop a table
+
+This method will be moved to another class
 ```php
 $query->drop('temporary')->go();
 ```
