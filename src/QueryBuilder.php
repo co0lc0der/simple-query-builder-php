@@ -361,10 +361,10 @@ class QueryBuilder
 						$field = $this->prepareField($cond[0]);
 						$value = $cond[1];
 
-						if (strtolower($value) == 'is null') {
+						if (is_string($value) && strtolower($value) == 'is null') {
 							$operator = 'IS NULL';
 							$sql .= "({$field} {$operator})";
-						} else if (strtolower($value) == 'is not null') {
+						} else if (is_string($value) && strtolower($value) == 'is not null') {
 							$operator = 'IS NOT NULL';
 							$sql .= "({$field} {$operator})";
 						} else if (is_array($value)) {
