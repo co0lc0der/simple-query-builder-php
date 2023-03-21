@@ -212,18 +212,25 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param int|string $column
+	 * @param string $column
 	 * @return $this|string|array
 	 */
-	public function column($column = 0)
+	public function column(string $column = 'id')
 	{
-		if (is_integer($column) or is_string($column)) {
+		if (!is_string($column)) {
 			$this->setError('Incorrect type of $column in ' . __METHOD__);
 			return $this;
 		}
 
-		$this->query('', [], $column, self::FETCH_COLUMN);
-		return $this->result;
+		if (empty($column)) {
+			$this->setError('Empty $column in ' . __METHOD__);
+			return $this;
+		}
+
+		$this->query();
+		return array_column($this->result, $column);
+		//$this->query('', [], $column, self::FETCH_COLUMN);
+		//return $this->result;
 	}
 
 	/**
@@ -236,14 +243,19 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param string|int $key
-	 * @param string|int $column
+	 * @param string $key
+	 * @param string $column
 	 * @return array|QueryBuilder
 	 */
-	public function pluck($key = 0, $column = 1): array
+	public function pluck(string $key = 'id', string $column = '')
 	{
-		if ((is_integer($key) or is_integer($column)) or (is_string($key) or is_string($column))) {
+		if (!(is_string($key) and is_string($column))) {
 			$this->setError('Incorrect type of $key or $column in ' . __METHOD__);
+			return $this;
+		}
+
+		if (empty($column)) {
+			$this->setError('Empty $column in ' . __METHOD__);
 			return $this;
 		}
 
