@@ -16,21 +16,23 @@ class QueryBuilder
 	private const FETCH_ONE = 1;
 	private const FETCH_ALL = 2;
 	private const FETCH_COLUMN = 3;
-	private $pdo = null;
+	private PDO $pdo;
 	private $query = null;
-	private $sql = '';
-	private $error = false;
-	private $errorMessage = '';
-	private $result = [];
-	private $params = [];
-	private $count = -1;
+	private string $sql = '';
+	private bool $error = false;
+	private string $errorMessage = '';
+	private bool $printErrors = false;
+	private array $result = [];
+	private array $params = [];
+	private int $count = -1;
 
 	/**
 	 * @param PDO $pdo
 	 */
-	public function __construct(PDO $pdo)
+	public function __construct(PDO $pdo, bool $printErrors = false)
 	{
 		$this->pdo = $pdo;
+		$this->printErrors = $printErrors;
 	}
 
 	/**
@@ -91,6 +93,10 @@ class QueryBuilder
 	 */
 	public function getErrorMessage(): string
 	{
+		if ($this->printErrors && $this->error) {
+			echo $this->errorMessage;
+		}
+
 		return $this->errorMessage;
 	}
 
@@ -102,6 +108,10 @@ class QueryBuilder
 	{
 		$this->error = !empty($message);
 		$this->errorMessage = $message;
+
+		if ($this->printErrors && $this->error) {
+			echo $this->errorMessage;
+		}
 	}
 
 	/**
