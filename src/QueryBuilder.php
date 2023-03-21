@@ -55,7 +55,19 @@ class QueryBuilder
 	 */
 	public function getSql(): string
 	{
-		return $this->sql;
+		$sql = $this->sql;
+
+		if (!empty($this->params)) {
+			foreach ($this->params as $param) {
+				if (is_string($param)) {
+					$sql = str_replace('?', "'{$param}'", $sql);
+				} else {
+					$sql = str_replace('?', $param, $sql);
+				}
+			}
+		}
+
+		return $sql;
 	}
 
 	/**
