@@ -28,6 +28,7 @@ class QueryBuilder
 
 	/**
 	 * @param PDO $pdo
+	 * @param bool $printErrors
 	 */
 	public function __construct(PDO $pdo, bool $printErrors = false)
 	{
@@ -568,17 +569,23 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param array|string $cond
+	 * @param array|string $field
+	 * @param string $value
 	 * @return $this
 	 */
-	public function like($cond = []): QueryBuilder
+	public function like($field, string $value = ''): QueryBuilder
 	{
-		if ($cond) {
-			if (is_string($cond)) {
-				$this->where($cond);
-			} else if (is_array($cond)) {
-				$this->where([[$cond[0], 'LIKE', $cond[1]]]);
-			}
+		if (empty($field)) {
+			$this->setError('Empty $field in ' . __METHOD__);
+			return $this;
+		}
+
+    if (is_string($field) && !empty($field) && is_string($value) && !empty($value)) {
+	    $this->where([[$field, 'LIKE', $value]]);
+    } else if (is_string($field) && empty($value)) {
+			$this->where($field);
+		} else if (is_array($field)) {
+			$this->where([[$field[0], 'LIKE', $field[1]]]);
 		}
 
 		return $this;
