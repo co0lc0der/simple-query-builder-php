@@ -390,8 +390,14 @@ TRUNCATE TABLE `users`;
 
 This method will be moved to another class
 ```php
-$query->drop('temporary')->go();
+$query->drop('temporary')->go(); // $add_exists = true
 ```
 ```sql
 DROP TABLE IF EXISTS `temporary`;
+```
+```php
+$query->drop('temp', false)->go(); // $add_exists = false
+```
+```sql
+DROP TABLE `temp`;
 ```
