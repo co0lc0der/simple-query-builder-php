@@ -892,6 +892,14 @@ class QueryBuilder
 		return $this;
 	}
 
+    /**
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return $this->getSql();
+    }
+
 	/**
 	 * @param string $table
 	 * @param bool $add_exists
