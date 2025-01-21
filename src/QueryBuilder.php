@@ -518,7 +518,7 @@ class QueryBuilder
 	 * @param array|string $fields
 	 * @return $this
 	 */
-	public function select($table, $fields = '*'): QueryBuilder
+	public function select($table, $fields = '*', $dist = false): QueryBuilder
 	{
 		if (empty($table) || empty($fields)) {
 			$this->setError('Empty $table or $fields in ' . __METHOD__);
@@ -527,8 +527,11 @@ class QueryBuilder
 
 		$this->reset();
 
+        $this->sql = "SELECT ";
+        $this->sql .= $dist ? "DISTINCT " : '';
+
 		if (is_array($fields) || is_string($fields)) {
-			$this->sql = "SELECT {$this->prepareAliases($fields)}";
+			$this->sql .= $this->prepareAliases($fields);
 		} else {
 			$this->setError('Incorrect type of $fields in ' . __METHOD__ . '. $fields must be a string or an array');
 			return $this;
