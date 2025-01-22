@@ -448,6 +448,21 @@ class QueryBuilder
 		return $result;
 	}
 
+    /**
+     * @param string $str
+     * @return bool
+     */
+    private function searchForSpecChars(string $str): bool
+    {
+        foreach (self::FIELD_SPEC_CHARS as $char) {
+            if (strpos($char, $str) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 	/**
 	 * @param string $field
 	 * @param string $sort
