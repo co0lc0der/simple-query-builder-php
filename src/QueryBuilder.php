@@ -26,7 +26,7 @@ class QueryBuilder
 	private bool $printErrors = false;
 	private array $result = [];
 	private array $params = [];
-    private array $fields = [];
+    private $fields = [];
 	private int $count = -1;
     private bool $concat = false;
 
@@ -804,8 +804,8 @@ class QueryBuilder
 			return $this;
 		}
 
-		if (is_array($table) or is_string($table)) {
-			$table = $this->prepareAliases($table);
+		if (is_array($table) || is_string($table)) {
+			$table = $this->prepareTables($table);
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
