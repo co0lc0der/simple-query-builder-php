@@ -8,7 +8,7 @@ use PDO;
  */
 class QueryBuilder
 {
-	private const OPERATORS = ['=', '>', '<', '>=', '<=', '!=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
+	private const COND_OPERATORS = ['=', '>', '<', '>=', '<=', '!=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
 	private const LOGICS = ['AND', 'OR', 'NOT'];
 	private const SORT_TYPES = ['ASC', 'DESC'];
 	private const JOIN_TYPES = ['INNER', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
@@ -415,7 +415,7 @@ class QueryBuilder
 						$operator = strtoupper($cond[1]);
 						$value = $cond[2];
 
-						if (in_array($operator, self::OPERATORS)) {
+						if (in_array($operator, self::COND_OPERATORS)) {
 							if ($operator == 'IN' && is_array($value)) {
 								$values = rtrim(str_repeat("?,", count($value)), ',');
                 $sql .= "({$field} {$operator} ({$values}))";
