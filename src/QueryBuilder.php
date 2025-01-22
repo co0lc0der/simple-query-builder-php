@@ -904,6 +904,22 @@ class QueryBuilder
         return $this->getSql();
     }
 
+    public function dropView(string $viewName, bool $addExists = true)
+    {
+        // this method will be moved to another class
+        if (empty($viewName)) {
+            $this->setError('Empty $viewName in ' . __METHOD__);
+            return $this;
+        }
+
+        $exists = $addExists ? "IF EXISTS " : "";
+
+        $this->reset();
+        $this->sql = "DROP VIEW {$exists}`{$viewName}`";
+
+        return $this;
+    }
+
 	/**
 	 * @param string $table
 	 * @param bool $add_exists
