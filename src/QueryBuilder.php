@@ -727,7 +727,12 @@ class QueryBuilder
 	 */
 	public function limit(int $limit = 1): QueryBuilder
 	{
-		$this->sql .= " LIMIT {$limit}";
+        if (mb_strpos(mb_strtolower($this->sql), 'delete') !== false && $this->getDriver() == 'sqlite') {
+            return $this;
+        }
+
+        $this->sql .= " LIMIT {$limit}";
+
 		return $this;
 	}
 
