@@ -688,7 +688,8 @@ class QueryBuilder
 	 * @param string $field
 	 * @return $this
 	 */
-	public function isNull(string $field) {
+	public function isNull(string $field): QueryBuilder
+    {
 		if (empty($field)) {
 			$this->setError('Empty $field in ' . __METHOD__);
 			return $this;
@@ -702,7 +703,8 @@ class QueryBuilder
 	 * @param string $field
 	 * @return $this
 	 */
-	public function isNotNull(string $field) {
+	public function isNotNull(string $field): QueryBuilder
+    {
 		if (empty($field)) {
 			$this->setError('Empty $field in ' . __METHOD__);
 			return $this;
@@ -716,7 +718,8 @@ class QueryBuilder
 	 * @param string $field
 	 * @return $this
 	 */
-	public function notNull(string $field) {
+	public function notNull(string $field): QueryBuilder
+    {
 		$this->isNotNull($field);
 		return $this;
 	}
@@ -947,6 +950,17 @@ class QueryBuilder
 	}
 
     /**
+     * @param bool $unionAll
+     * @return $this
+     */
+    public function union(bool $unionAll = false): QueryBuilder
+    {
+        $this->concat = true;
+        $this->sql .= $unionAll ? ' UNION ALL ' : ' UNION ';
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function __toString(): string
@@ -959,7 +973,7 @@ class QueryBuilder
      * @param bool $addExists
      * @return $this
      */
-    public function createView(string $viewName, bool $addExists = true)
+    public function createView(string $viewName, bool $addExists = true): QueryBuilder
     {
         // this method will be moved to another class
         if (empty($viewName)) {
@@ -984,7 +998,7 @@ class QueryBuilder
      * @param bool $addExists
      * @return $this
      */
-    public function dropView(string $viewName, bool $addExists = true)
+    public function dropView(string $viewName, bool $addExists = true): QueryBuilder
     {
         // this method will be moved to another class
         if (empty($viewName)) {
