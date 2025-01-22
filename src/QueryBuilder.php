@@ -8,7 +8,7 @@ use PDO;
  */
 class QueryBuilder
 {
-	private const COND_OPERATORS = ['=', '>', '<', '>=', '<=', '!=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
+	private const COND_OPERATORS = ['=', '>', '<', '>=', '<=', '!=', '<>', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
 	private const LOGICS = ['AND', 'OR', 'NOT'];
 	private const SORT_TYPES = ['ASC', 'DESC'];
 	private const JOIN_TYPES = ['INNER', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
@@ -973,12 +973,12 @@ class QueryBuilder
         }
 
         if (mb_strpos(mb_strtolower($this->sql), 'union') !== false) {
-            $this->setError('SQL has already UNION in  ' . __METHOD__);
+            $this->setError('SQL has already UNION in ' . __METHOD__);
             return $this;
         }
 
         $this->concat = true;
-        $fields = $this->fields;
+        $fields = $this->fields ? : '*';
         $this->sql .= $unionAll ? ' UNION ALL ' : ' UNION ';
 		$this->sql .= "SELECT {$this->prepareAliases($fields)}";
 
