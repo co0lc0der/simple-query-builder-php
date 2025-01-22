@@ -992,6 +992,45 @@ class QueryBuilder
     }
 
     /**
+     * @return $this
+     */
+    public function excepts(): QueryBuilder
+    {
+        $this->concat = true;
+        $this->sql .= ' EXCEPT ';
+        return $this;
+    }
+
+    /**
+     * @param $table
+     * @return $this
+     */
+    public function exceptSelect($table): QueryBuilder
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
+
+        if (mb_strpos(mb_strtolower($this->sql), 'except') !== false) {
+            $this->setError('SQL has already EXCEPT in ' . __METHOD__);
+            return $this;
+        }
+
+        $this->concat = true;
+        $fields = $this->fields ? : '*';
+        $this->sql .= " EXCEPT SELECT {$this->prepareAliases($fields)}";
+
+        if (is_array($table) || is_string($table)) {
+            $this->sql .= " FROM {$this->prepareTables($table)}";
+        } else {
+            $this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
+        }
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function __toString(): string
