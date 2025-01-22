@@ -831,14 +831,13 @@ class QueryBuilder
 		}
 
 		if (is_array($table) || is_string($table)) {
-			$table = $this->prepareAliases($table);
+            $table = $this->prepareTables($table);
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
 		}
 
 		$this->reset();
-
         $this->fields = $fields;
 
 		if (isset($fields[0]) && is_array($fields[0])) {
