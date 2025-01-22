@@ -12,6 +12,8 @@ class QueryBuilder
 	private const LOGICS = ['AND', 'OR', 'NOT'];
 	private const SORT_TYPES = ['ASC', 'DESC'];
 	private const JOIN_TYPES = ['INNER', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
+    private const SQLITE_JOIN_TYPES = ['INNER', 'LEFT', 'LEFT OUTER', 'CROSS'];
+    private const FIELD_SPEC_CHARS = ['+', '-', '*', '/', '%', '(', ')', '||'];
 	private const NO_FETCH = 0;
 	private const FETCH_ONE = 1;
 	private const FETCH_ALL = 2;
