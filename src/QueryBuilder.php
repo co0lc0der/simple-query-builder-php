@@ -961,6 +961,37 @@ class QueryBuilder
     }
 
     /**
+     * @param string|array $table
+     * @param bool $unionAll
+     * @return $this
+     */
+    public function unionSelect($table, bool $unionAll = false): QueryBuilder
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
+
+        if (mb_strpos(mb_strtolower($this->sql), 'union') !== false) {
+            $this->setError('SQL has already UNION in  ' . __METHOD__);
+            return $this;
+        }
+
+        $this->concat = true;
+        $fields = $this->fields;
+        $this->sql .= $unionAll ? ' UNION ALL ' : ' UNION ';
+		$this->sql .= "SELECT {$this->prepareAliases($fields)}";
+
+		if (is_array($table) || is_string($table)) {
+			$this->sql .= " FROM {$this->prepareTables($table)}";
+		} else {
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
+		}
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function __toString(): string
