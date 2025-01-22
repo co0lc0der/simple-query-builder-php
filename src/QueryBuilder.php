@@ -904,6 +904,26 @@ class QueryBuilder
         return $this->getSql();
     }
 
+    public function createView(string $viewName, bool $addExists = true)
+    {
+        // this method will be moved to another class
+        if (empty($viewName)) {
+            $this->setError('Empty $viewName in ' . __METHOD__);
+            return $this;
+        }
+
+        $exists = $addExists ? "IF NOT EXISTS " : "";
+
+        if (mb_strpos(mb_strtolower($this->sql), 'select') === false) {
+            $this->setError('No SELECT found in ' . __METHOD__);
+            return $this;
+        }
+
+        $this->sql = "CREATE VIEW {$exists}`{$viewName}` AS " . $this->sql;
+
+        return $this;
+    }
+
     public function dropView(string $viewName, bool $addExists = true)
     {
         // this method will be moved to another class
