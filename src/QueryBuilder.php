@@ -28,6 +28,7 @@ class QueryBuilder
 	private array $params = [];
     private array $fields = [];
 	private int $count = -1;
+    private bool $concat = false;
 
 	/**
 	 * @param PDO $pdo
@@ -164,6 +165,7 @@ class QueryBuilder
 		$this->result = [];
 		$this->count = -1;
 		$this->setError();
+        $this->concat = false;
 
 		return true;
 	}
@@ -461,6 +463,27 @@ class QueryBuilder
         }
 
         return false;
+    }
+
+    /**
+     * @param $table
+     * @return string
+     */
+    private function prepareTables($table): string
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return '';
+        }
+
+        if (is_string($table) && (mb_strpos(mb_strtolower($table), 'select') !== false)) {
+            $this->concat = true;
+            return "({$table})";
+        } elseif (is_string($table) && $this->searchForSpecChars($table)) {
+            return $table;
+        }
+
+        return $this->prepareAliases($table);
     }
 
 	/**
