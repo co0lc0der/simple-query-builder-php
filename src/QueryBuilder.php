@@ -60,13 +60,14 @@ class QueryBuilder
 	public function getSql(bool $withValues = true): string
 	{
 		$sql = $this->sql;
+        $params = $this->params;
 
-		if (!empty($this->params) && $withValues) {
-			foreach ($this->params as $param) {
+		if ($params && $withValues) {
+			foreach ($params as $param) {
 				if (is_string($param)) {
-					$sql = str_replace('?', "'{$param}'", $sql);
+                    $sql = implode("'{$param}'", explode('?', $sql, 2));
 				} else {
-					$sql = str_replace('?', $param, $sql);
+                    $sql = implode($param, explode('?', $sql, 2));
 				}
 			}
 		}
