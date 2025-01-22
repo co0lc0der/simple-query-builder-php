@@ -1036,4 +1036,9 @@ class QueryBuilder
 
 		return $this;
 	}
+
+    public function getDriver(): string
+    {
+        return $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    }
 }
