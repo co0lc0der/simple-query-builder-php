@@ -26,6 +26,7 @@ class QueryBuilder
 	private bool $printErrors = false;
 	private array $result = [];
 	private array $params = [];
+    private array $fields = [];
 	private int $count = -1;
 
 	/**
@@ -158,6 +159,7 @@ class QueryBuilder
 	{
 		$this->sql = '';
 		$this->params = [];
+        $this->fields = [];
 		$this->query = null;
 		$this->result = [];
 		$this->count = -1;
@@ -454,16 +456,16 @@ class QueryBuilder
 	private function prepareSorting(string $field = '', string $sort = ''): array
 	{
 		if (strpos($field, ' ') !== false) {
-			$splitted = explode(' ', $field);
-      $field = $splitted[0];
-      $sort = $splitted[1];
+            $splitted = explode(' ', $field);
+            $field = $splitted[0];
+            $sort = $splitted[1];
 		}
 
-    $field = $this->prepareField($field);
+        $field = $this->prepareField($field);
 
 		$sort =  ($sort == '') ? 'ASC' : strtoupper($sort);
 
-    return [$field, $sort];
+        return [$field, $sort];
 	}
 
 	/**
@@ -799,6 +801,8 @@ class QueryBuilder
 
 		$this->reset();
 
+        $this->fields = $fields;
+
 		if (isset($fields[0]) && is_array($fields[0])) {
 			$names = array_shift($fields);
 			$value = rtrim(str_repeat("?,", count($names)), ',');
@@ -833,6 +837,8 @@ class QueryBuilder
 			$this->setError('Empty $table or $fields in ' . __METHOD__);
 			return $this;
 		}
+
+        $this->fields = $fields;
 
 		if (is_array($table) or is_string($table)) {
 			$table = $this->prepareAliases($table);
@@ -906,6 +912,11 @@ class QueryBuilder
         return $this->getSql();
     }
 
+    /**
+     * @param string $viewName
+     * @param bool $addExists
+     * @return $this
+     */
     public function createView(string $viewName, bool $addExists = true)
     {
         // this method will be moved to another class
@@ -926,6 +937,11 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @param string $viewName
+     * @param bool $addExists
+     * @return $this
+     */
     public function dropView(string $viewName, bool $addExists = true)
     {
         // this method will be moved to another class
@@ -944,17 +960,17 @@ class QueryBuilder
 
 	/**
 	 * @param string $table
-	 * @param bool $add_exists
+	 * @param bool $addExists
 	 * @return $this
 	 */
-	public function drop(string $table, bool $add_exists = true): QueryBuilder
+	public function drop(string $table, bool $addExists = true): QueryBuilder
 	{
 		if (empty($table)) {
 			$this->setError('Empty $table in ' . __METHOD__);
 			return $this;
 		}
 
-		$exists = ($add_exists) ? 'IF EXISTS ' : '';
+		$exists = ($addExists) ? 'IF EXISTS ' : '';
 
 		$this->reset();
 		$this->sql = "DROP TABLE {$exists}`{$table}`";
