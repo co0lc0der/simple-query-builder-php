@@ -1031,6 +1031,45 @@ class QueryBuilder
     }
 
     /**
+     * @return $this
+     */
+    public function intersect(): QueryBuilder
+    {
+        $this->concat = true;
+        $this->sql .= ' INTERSECT ';
+        return $this;
+    }
+
+    /**
+     * @param $table
+     * @return $this
+     */
+    public function intersectSelect($table): QueryBuilder
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
+
+        if (mb_strpos(mb_strtolower($this->sql), 'intersect') !== false) {
+            $this->setError('SQL has already INTERSECT in ' . __METHOD__);
+            return $this;
+        }
+
+        $this->concat = true;
+        $fields = $this->fields ? : '*';
+        $this->sql .= " INTERSECT SELECT {$this->prepareAliases($fields)}";
+
+        if (is_array($table) || is_string($table)) {
+            $this->sql .= " FROM {$this->prepareTables($table)}";
+        } else {
+            $this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
+        }
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function __toString(): string
