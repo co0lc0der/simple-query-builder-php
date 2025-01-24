@@ -457,7 +457,7 @@ class QueryBuilder
     private function searchForSpecChars(string $str): bool
     {
         foreach (self::FIELD_SPEC_CHARS as $char) {
-            if (strpos($char, $str) !== false) {
+            if (mb_strpos($str, $char) !== false) {
                 return true;
             }
         }
@@ -568,23 +568,29 @@ class QueryBuilder
 			return $this;
 		}
 
-		$this->reset();
+        $preparedTable = $this->prepareTables($table);
+        $preparedFields = $this->prepareAliases($fields);
 
-        $this->sql = "SELECT ";
-        $this->sql .= $dist ? "DISTINCT " : '';
+		if (!$this->concat) {
+            $this->reset();
+        }
 
-		if (is_array($fields) || is_string($fields)) {
-			$this->sql .= $this->prepareAliases($fields);
-		} else {
-			$this->setError('Incorrect type of $fields in ' . __METHOD__ . '. $fields must be a string or an array');
-			return $this;
-		}
+        $sql = "SELECT ";
+        $sql .= $dist ? "DISTINCT " : '';
 
-		if (is_array($table) || is_string($table)) {
-			$this->sql .= " FROM {$this->prepareAliases($table)}";
-		} else {
-			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
-		}
+        if (is_string($table) && $this->searchForSpecChars($table) && $fields == '*') {
+            $sql .= $preparedTable;
+            $this->fields = $this->prepareAliases($table);
+        } else {
+            $this->fields = $fields;
+            $sql .= "{$preparedFields} FROM {$preparedTable}";
+        }
+
+        if ($this->concat) {
+            $this->sql .= $sql;
+        } else {
+            $this->sql = $sql;
+        }
 
 		return $this;
 	}
@@ -650,9 +656,9 @@ class QueryBuilder
 			return $this;
 		}
 
-    if (is_string($field) && !empty($field) && is_string($value) && !empty($value)) {
-	    $this->where([[$field, 'LIKE', $value]]);
-    } else if (is_string($field) && empty($value)) {
+        if (is_string($field) && !empty($field) && !empty($value)) {
+            $this->where([[$field, 'LIKE', $value]]);
+        } else if (is_string($field) && empty($value)) {
 			$this->where($field);
 		} else if (is_array($field)) {
 			$this->where([[$field[0], 'LIKE', $field[1]]]);
