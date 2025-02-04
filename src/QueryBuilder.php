@@ -1174,6 +1174,6 @@ class QueryBuilder
 
     public function getDriver(): string
     {
-        return $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        return strtolower($this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
     }
 }
