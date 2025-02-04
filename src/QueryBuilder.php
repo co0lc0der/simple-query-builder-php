@@ -11,7 +11,7 @@ class QueryBuilder
 	private const COND_OPERATORS = ['=', '>', '<', '>=', '<=', '!=', '<>', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
 	private const LOGICS = ['AND', 'OR', 'NOT'];
 	private const SORT_TYPES = ['ASC', 'DESC'];
-	private const JOIN_TYPES = ['INNER', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
+	private const JOIN_TYPES = ['INNER', 'LEFT', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
     private const SQLITE_JOIN_TYPES = ['INNER', 'LEFT', 'LEFT OUTER', 'CROSS'];
     private const FIELD_SPEC_CHARS = ['+', '-', '*', '/', '%', '(', ')', '||'];
 	private const NO_FETCH = 0;
@@ -221,7 +221,7 @@ class QueryBuilder
 
 	/**
 	 * @param string $column
-	 * @return $this|string|array
+	 * @return QueryBuilder|string|array
 	 */
 	public function column(string $column = 'id')
 	{
@@ -922,18 +922,26 @@ class QueryBuilder
 	{
 		$join_type = strtoupper($join_type);
 
-		if (empty($join_type) || !in_array($join_type, self::JOIN_TYPES)) {
-			$this->setError('Empty $join_type or is not allowed in ' . __METHOD__);
-			return $this;
-		}
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
 
-		if (empty($table)) {
-			$this->setError('Empty $table in ' . __METHOD__);
-			return $this;
-		}
+        if (empty($join_type)) {
+            $this->setError('Empty $join_type in ' . __METHOD__);
+            return $this;
+        }
+
+		if ($this->getDriver() == 'sqlite' && !in_array($join_type, self::SQLITE_JOIN_TYPES)) {
+            $this->setError('$join_type is not allowed in SQLite in ' . __METHOD__);
+            return $this;
+        } else if (!in_array($join_type, self::JOIN_TYPES)) {
+            $this->setError('$join_type is not allowed in ' . __METHOD__);
+            return $this;
+        }
 
 		if (is_array($table) || is_string($table)) {
-			$this->sql .= " {$join_type} JOIN {$this->prepareAliases($table)}";
+			$this->sql .= " {$join_type} JOIN {$this->prepareTables($table)}";
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
@@ -949,8 +957,6 @@ class QueryBuilder
 				return $this;
 			}
 		}
-
-		$this->setError();
 
 		return $this;
 	}
