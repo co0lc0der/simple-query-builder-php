@@ -374,6 +374,15 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         $this->assertSame([], $result->getParams());
     }
 
+    public function testSelectConcatStr()
+    {
+        $result = $this->qb->select("'Hello' || ' world!' as 'str'");
+
+        $this->assertSame(false, $result->hasError());
+        $this->assertSame("SELECT 'Hello' || ' world!' as 'str'", $result->getSql());
+        $this->assertSame([], $result->getParams());
+    }
+
     public function testSelectSqliteVersion()
     {
         $result = $this->qb->select("sqlite_version() as ver");
