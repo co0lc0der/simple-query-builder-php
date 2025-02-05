@@ -1029,6 +1029,22 @@ class QueryBuilder
     }
 
     /**
+     * @param string|array $table
+     * @return QueryBuilder
+     */
+    public function unionSelectAll($table): QueryBuilder
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
+
+        $this->unionSelect($table, true);
+
+        return $this;
+    }
+
+    /**
      * @return QueryBuilder
      */
     public function excepts(): QueryBuilder

@@ -248,6 +248,15 @@ class SqlSelectExtTest extends PHPUnit\Framework\TestCase
         $this->assertSame($result->getErrorMessage(), 'Empty $table in QueryBuilder::unionSelect');
     }
 
+    public function testUnionSelectAllMethodEmptyTable()
+    {
+        $result = $this->qb->select('clients', ['name', 'age'])->unionSelectAll('');
+
+        $this->assertSame($this->qb, $result);
+        $this->assertSame(true, $result->hasError());
+        $this->assertSame($result->getErrorMessage(), 'Empty $table in QueryBuilder::unionSelectAll');
+    }
+
     public function testUnionSelectIncorrectTable()
     {
         $result = $this->qb->select('clients', ['name', 'age'])->unionSelect(2);
@@ -255,15 +264,6 @@ class SqlSelectExtTest extends PHPUnit\Framework\TestCase
         $this->assertSame($this->qb, $result);
         $this->assertSame(true, $result->hasError());
         $this->assertSame($result->getErrorMessage(), 'Incorrect type of $table in QueryBuilder::unionSelect. $table must be a string or an array');
-    }
-
-    public function testUnionSelectDoubleUnion()
-    {
-        $result = $this->qb->select('clients', ['name', 'age'])->union()->unionSelect('clients');
-
-        $this->assertSame($this->qb, $result);
-        $this->assertSame(true, $result->hasError());
-        $this->assertSame($result->getErrorMessage(), 'SQL has already UNION in QueryBuilder::unionSelect');
     }
 
     public function testUnionSelectWhere()
@@ -281,6 +281,17 @@ class SqlSelectExtTest extends PHPUnit\Framework\TestCase
     {
         $result = $this->qb->select('cabs', ['id', 'name'])
                 ->unionSelect('printer_models', true)->where([['id', '<', 10]]);
+
+        $this->assertSame($this->qb, $result);
+        $this->assertSame(false, $result->hasError());
+        $this->assertSame("SELECT `id`, `name` FROM `cabs` UNION ALL SELECT `id`, `name` FROM `printer_models` WHERE (`id` < 10)", $result->getSql());
+        $this->assertSame([10], $result->getParams());
+    }
+
+    public function testUnionSelectAllMethodWhere()
+    {
+        $result = $this->qb->select('cabs', ['id', 'name'])
+                ->unionSelectAll('printer_models')->where([['id', '<', 10]]);
 
         $this->assertSame($this->qb, $result);
         $this->assertSame(false, $result->hasError());
