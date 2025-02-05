@@ -200,7 +200,7 @@ class QueryBuilder
 	/**
 	 * @param array|string $table
 	 * @param string $field
-	 * @return string|$this
+	 * @return QueryBuilder|array
 	 */
 	public function count($table, string $field = '')
 	{
@@ -221,7 +221,7 @@ class QueryBuilder
 
 	/**
 	 * @param string $column
-	 * @return QueryBuilder|string|array
+	 * @return QueryBuilder|array
 	 */
 	public function column(string $column = 'id')
 	{
@@ -236,6 +236,7 @@ class QueryBuilder
 		}
 
 		$this->query();
+
 		return array_column($this->result, $column);
 		//$this->query('', [], $column, self::FETCH_COLUMN);
 		//return $this->result;
@@ -268,6 +269,7 @@ class QueryBuilder
 		}
 
 		$this->query();
+
 		return array_column($this->result, $column, $key);
 	}
 
@@ -511,7 +513,7 @@ class QueryBuilder
 	 * @param array $params
 	 * @param int|string $column
 	 * @param int $fetch
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function query(string $sql = '', array $params = [], $column = 0, int $fetch = self::FETCH_ALL): QueryBuilder
 	{
@@ -556,12 +558,13 @@ class QueryBuilder
 		return $this;
 	}
 
-	/**
-	 * @param array|string $table
-	 * @param array|string $fields
-	 * @return $this
-	 */
-	public function select($table, $fields = '*', $dist = false): QueryBuilder
+    /**
+     * @param array|string $table
+     * @param array|string $fields
+     * @param bool $dist
+     * @return QueryBuilder
+     */
+	public function select($table, $fields = '*', bool $dist = false): QueryBuilder
 	{
 		if (empty($table) || empty($fields)) {
 			$this->setError('Empty $table or $fields in ' . __METHOD__);
@@ -595,10 +598,27 @@ class QueryBuilder
 		return $this;
 	}
 
+    /**
+     * @param array|string $table
+     * @param array|string $fields
+     * @return QueryBuilder
+     */
+    public function selectDistinct($table, $fields = '*'): QueryBuilder
+    {
+        if (!empty($table) && !empty($fields)) {
+            $this->select($table, $fields, true);
+        } else {
+            $this->setError('Empty $table or $fields in ' . __METHOD__);
+            return $this;
+        }
+
+        return $this;
+    }
+
 	/**
 	 * @param array|string $where
 	 * @param string $addition
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function where($where, string $addition = ''): QueryBuilder
 	{
@@ -624,7 +644,7 @@ class QueryBuilder
 
 	/**
 	 * @param array|string $having
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function having($having): QueryBuilder
 	{
@@ -647,7 +667,7 @@ class QueryBuilder
 	/**
 	 * @param array|string $field
 	 * @param string $value
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function like($field, string $value = ''): QueryBuilder
 	{
@@ -670,7 +690,7 @@ class QueryBuilder
 	/**
 	 * @param array|string $field
 	 * @param string $value
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function notLike($field, string $value = ''): QueryBuilder
 	{
@@ -707,7 +727,7 @@ class QueryBuilder
 
 	/**
 	 * @param string $field
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function isNotNull(string $field): QueryBuilder
     {
@@ -722,7 +742,7 @@ class QueryBuilder
 
 	/**
 	 * @param string $field
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function notNull(string $field): QueryBuilder
     {
@@ -732,7 +752,7 @@ class QueryBuilder
 
 	/**
 	 * @param int $limit
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function limit(int $limit = 1): QueryBuilder
 	{
@@ -747,7 +767,7 @@ class QueryBuilder
 
 	/**
 	 * @param int $offset
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function offset(int $offset = 0): QueryBuilder
 	{
@@ -758,7 +778,7 @@ class QueryBuilder
 	/**
 	 * @param string|array $field
 	 * @param string $sort
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function orderBy($field = '', string $sort = ''): QueryBuilder
 	{
@@ -793,7 +813,7 @@ class QueryBuilder
 
 	/**
 	 * @param string|array $field
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function groupBy($field = ''): QueryBuilder
 	{
@@ -809,7 +829,7 @@ class QueryBuilder
 
 	/**
 	 * @param array|string $table
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function delete($table): QueryBuilder
 	{
@@ -835,7 +855,7 @@ class QueryBuilder
 	/**
 	 * @param array|string $table
 	 * @param array $fields
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function insert($table, array $fields = []): QueryBuilder
 	{
@@ -880,7 +900,7 @@ class QueryBuilder
 	/**
 	 * @param array|string $table
 	 * @param array $fields
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function update($table, array $fields = []): QueryBuilder
 	{
@@ -914,9 +934,9 @@ class QueryBuilder
 
 	/**
 	 * @param array|string $table
-	 * @param $on
+	 * @param array|string $on
 	 * @param string $join_type
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function join($table, $on, string $join_type = 'INNER'): QueryBuilder
 	{
@@ -963,7 +983,7 @@ class QueryBuilder
 
     /**
      * @param bool $unionAll
-     * @return $this
+     * @return QueryBuilder
      */
     public function union(bool $unionAll = false): QueryBuilder
     {
@@ -973,19 +993,24 @@ class QueryBuilder
     }
 
     /**
+     * @return QueryBuilder
+     */
+    public function unionAll(): QueryBuilder
+    {
+        $this->concat = true;
+        $this->sql .= ' UNION ALL ';
+        return $this;
+    }
+
+    /**
      * @param string|array $table
      * @param bool $unionAll
-     * @return $this
+     * @return QueryBuilder
      */
     public function unionSelect($table, bool $unionAll = false): QueryBuilder
     {
         if (empty($table)) {
             $this->setError('Empty $table in ' . __METHOD__);
-            return $this;
-        }
-
-        if (mb_strpos(mb_strtolower($this->sql), 'union') !== false) {
-            $this->setError('SQL has already UNION in ' . __METHOD__);
             return $this;
         }
 
@@ -1004,7 +1029,23 @@ class QueryBuilder
     }
 
     /**
-     * @return $this
+     * @param string|array $table
+     * @return QueryBuilder
+     */
+    public function unionSelectAll($table): QueryBuilder
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
+
+        $this->unionSelect($table, true);
+
+        return $this;
+    }
+
+    /**
+     * @return QueryBuilder
      */
     public function excepts(): QueryBuilder
     {
@@ -1014,8 +1055,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $table
-     * @return $this
+     * @param string|array $table
+     * @return QueryBuilder
      */
     public function exceptSelect($table): QueryBuilder
     {
@@ -1043,7 +1084,7 @@ class QueryBuilder
     }
 
     /**
-     * @return $this
+     * @return QueryBuilder
      */
     public function intersect(): QueryBuilder
     {
@@ -1053,8 +1094,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $table
-     * @return $this
+     * @param string|array $table
+     * @return QueryBuilder
      */
     public function intersectSelect($table): QueryBuilder
     {
@@ -1092,7 +1133,7 @@ class QueryBuilder
     /**
      * @param string $viewName
      * @param bool $addExists
-     * @return $this
+     * @return QueryBuilder
      */
     public function createView(string $viewName, bool $addExists = true): QueryBuilder
     {
@@ -1117,7 +1158,7 @@ class QueryBuilder
     /**
      * @param string $viewName
      * @param bool $addExists
-     * @return $this
+     * @return QueryBuilder
      */
     public function dropView(string $viewName, bool $addExists = true): QueryBuilder
     {
@@ -1138,7 +1179,7 @@ class QueryBuilder
 	/**
 	 * @param string $table
 	 * @param bool $addExists
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function drop(string $table, bool $addExists = true): QueryBuilder
 	{
@@ -1157,7 +1198,7 @@ class QueryBuilder
 
 	/**
 	 * @param string $table
-	 * @return $this
+	 * @return QueryBuilder
 	 */
 	public function truncate(string $table): QueryBuilder
 	{
@@ -1172,6 +1213,9 @@ class QueryBuilder
 		return $this;
 	}
 
+    /**
+     * @return string
+     */
     public function getDriver(): string
     {
         return strtolower($this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
