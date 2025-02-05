@@ -90,7 +90,6 @@ I'm going to add the next features into future versions
 - add `BETWEEN`
 - add `WHERE EXISTS`
 - add TableBuilder class (for beginning `CREATE TABLE`, move `$query->drop()` and `$query->truncate()` into it)
-- add MySQL support
 - add PostgreSQL support
 - add `WITH`
 - and probably something more
