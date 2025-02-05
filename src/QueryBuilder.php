@@ -598,6 +598,23 @@ class QueryBuilder
 		return $this;
 	}
 
+    /**
+     * @param array|string $table
+     * @param array|string $fields
+     * @return QueryBuilder
+     */
+    public function selectDistinct($table, $fields = '*'): QueryBuilder
+    {
+        if (!empty($table) && !empty($fields)) {
+            $this->select($table, $fields, true);
+        } else {
+            $this->setError('Empty $table or $fields in ' . __METHOD__);
+            return $this;
+        }
+
+        return $this;
+    }
+
 	/**
 	 * @param array|string $where
 	 * @param string $addition

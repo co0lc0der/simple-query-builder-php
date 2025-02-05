@@ -21,7 +21,7 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         }
     }
 
-	public function testEmptyTable()
+	public function testSelectEmptyTable()
 	{
 		$result = $this->qb->select('', 'param');
 
@@ -30,7 +30,7 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         $this->assertSame($result->getErrorMessage(), 'Empty $table or $fields in QueryBuilder::select');
 	}
 
-	public function testEmptyFields()
+	public function testSelectEmptyFields()
 	{
 		$result = $this->qb->select('users', []);
 
@@ -39,7 +39,7 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         $this->assertSame($result->getErrorMessage(), 'Empty $table or $fields in QueryBuilder::select');
 	}
 
-	public function testEmptyTableAndFields()
+	public function testSelectEmptyTableAndFields()
 	{
 		$result = $this->qb->select('', []);
 
@@ -68,7 +68,7 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         $this->assertSame([1], $result->getParams());
     }
 
-	public function testSelectAll()
+	public function testSelect()
 	{
         $result = $this->qb->select('users');
 
@@ -76,6 +76,15 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         $this->assertSame("SELECT * FROM `users`", $result->getSql());
         $this->assertSame([], $result->getParams());
 	}
+
+    public function testSelectAliasAll()
+    {
+        $result = $this->qb->select(['u' => 'users'], 'u.*');
+
+        $this->assertSame(false, $result->hasError());
+        $this->assertSame("SELECT u.* FROM `users` AS `u`", $result->getSql());
+        $this->assertSame([], $result->getParams());
+    }
 
 	public function testSelectWhereEq()
 	{
@@ -257,6 +266,33 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         $this->assertSame([], $result->getParams());
     }
 
+    public function testSelectDistinctMethodEmptyTable()
+    {
+        $result = $this->qb->selectDistinct('', 'param');
+
+        $this->assertSame($this->qb, $result);
+        $this->assertSame(true, $result->hasError());
+        $this->assertSame($result->getErrorMessage(), 'Empty $table or $fields in QueryBuilder::selectDistinct');
+    }
+
+    public function testSelectDistinctMethodEmptyFields()
+    {
+        $result = $this->qb->selectDistinct('users', []);
+
+        $this->assertSame($this->qb, $result);
+        $this->assertSame(true, $result->hasError());
+        $this->assertSame($result->getErrorMessage(), 'Empty $table or $fields in QueryBuilder::selectDistinct');
+    }
+
+    public function testSelectDistinctMethodEmptyTableAndFields()
+    {
+        $result = $this->qb->selectDistinct('', []);
+
+        $this->assertSame($this->qb, $result);
+        $this->assertSame(true, $result->hasError());
+        $this->assertSame($this->qb->getErrorMessage(), 'Empty $table or $fields in QueryBuilder::selectDistinct');
+    }
+
     public function testSelectDistinctOrderBy()
     {
         $result = $this->qb->select('customers', 'city', true)->orderBy('city');
@@ -266,9 +302,27 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         $this->assertSame([], $result->getParams());
     }
 
+    public function testSelectDistinctMethodOrderBy()
+    {
+        $result = $this->qb->selectDistinct('customers', 'city')->orderBy('city');
+
+        $this->assertSame(false, $result->hasError());
+        $this->assertSame("SELECT DISTINCT `city` FROM `customers` ORDER BY `city` ASC", $result->getSql());
+        $this->assertSame([], $result->getParams());
+    }
+
     public function testSelectDistinctOrderBy2Col()
     {
         $result = $this->qb->select('customers', ['city', 'country'], true)->orderBy('country desc');
+
+        $this->assertSame(false, $result->hasError());
+        $this->assertSame("SELECT DISTINCT `city`, `country` FROM `customers` ORDER BY `country` DESC", $result->getSql());
+        $this->assertSame([], $result->getParams());
+    }
+
+    public function testSelectDistinctMethodOrderBy2Col()
+    {
+        $result = $this->qb->selectDistinct('customers', ['city', 'country'])->orderBy('country desc');
 
         $this->assertSame(false, $result->hasError());
         $this->assertSame("SELECT DISTINCT `city`, `country` FROM `customers` ORDER BY `country` DESC", $result->getSql());
@@ -347,7 +401,7 @@ class SqlSelectTest extends PHPUnit\Framework\TestCase
         $this->assertSame(['Nevada', 20], $result->getParams());
     }
 
-    public function testSelectSumm()
+    public function testSelectSum()
     {
         $result = $this->qb->select("1+5 as 'res'");
 
