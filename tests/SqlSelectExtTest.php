@@ -183,6 +183,20 @@ class SqlSelectExtTest extends PHPUnit\Framework\TestCase
         $this->assertSame([3000, 3000], $result->getParams());
     }
 
+    public function testSelectUnionAllMethodWhere()
+    {
+        $result = $this->qb->select('clients', ['name', 'age', 'total_sum' => 'account_sum + account_sum * 0.1'])
+            ->where([['account_sum', '<', 3000]])
+            ->unionAll()
+            ->select('clients', ['name', 'age', 'total_sum' => 'account_sum + account_sum * 0.3'])
+            ->where([['account_sum', '>=', 3000]]);
+
+        $this->assertSame($this->qb, $result);
+        $this->assertSame(false, $result->hasError());
+        $this->assertSame("SELECT `name`, `age`, account_sum + account_sum * 0.1 AS `total_sum` FROM `clients` WHERE (`account_sum` < 3000) UNION ALL SELECT `name`, `age`, account_sum + account_sum * 0.3 AS `total_sum` FROM `clients` WHERE (`account_sum` >= 3000)", $result->getSql());
+        $this->assertSame([3000, 3000], $result->getParams());
+    }
+
 	public function testSelectUnionWhereOrderBy()
 	{
         $result = $this->qb->select('departments', ['department_id', 'department_name'])
@@ -202,6 +216,20 @@ class SqlSelectExtTest extends PHPUnit\Framework\TestCase
         $result = $this->qb->select('departments', ['department_id', 'department_name'])
             ->where([['department_id', '>=', 10]])
             ->union(true)
+            ->select('employees', ['employee_id', 'last_name'])
+            ->where([['last_name', 'Rassohin']])->orderBy('2');
+
+        $this->assertSame($this->qb, $result);
+        $this->assertSame(false, $result->hasError());
+        $this->assertSame("SELECT `department_id`, `department_name` FROM `departments` WHERE (`department_id` >= 10) UNION ALL SELECT `employee_id`, `last_name` FROM `employees` WHERE (`last_name` = 'Rassohin') ORDER BY `2` ASC", $result->getSql());
+        $this->assertSame([10, 'Rassohin'], $result->getParams());
+    }
+
+    public function testSelectUnionAllMethodWhereOrderBy()
+    {
+        $result = $this->qb->select('departments', ['department_id', 'department_name'])
+            ->where([['department_id', '>=', 10]])
+            ->unionAll()
             ->select('employees', ['employee_id', 'last_name'])
             ->where([['last_name', 'Rassohin']])->orderBy('2');
 

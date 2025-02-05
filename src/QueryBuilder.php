@@ -973,6 +973,16 @@ class QueryBuilder
     }
 
     /**
+     * @return $this
+     */
+    public function unionAll(): QueryBuilder
+    {
+        $this->concat = true;
+        $this->sql .= ' UNION ALL ';
+        return $this;
+    }
+
+    /**
      * @param string|array $table
      * @param bool $unionAll
      * @return $this
