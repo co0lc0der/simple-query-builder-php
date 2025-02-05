@@ -8,10 +8,12 @@ use PDO;
  */
 class QueryBuilder
 {
-	private const OPERATORS = ['=', '>', '<', '>=', '<=', '!=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
+	private const COND_OPERATORS = ['=', '>', '<', '>=', '<=', '!=', '<>', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
 	private const LOGICS = ['AND', 'OR', 'NOT'];
 	private const SORT_TYPES = ['ASC', 'DESC'];
-	private const JOIN_TYPES = ['INNER', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
+	private const JOIN_TYPES = ['INNER', 'LEFT', 'LEFT OUTER', 'RIGHT OUTER', 'FULL OUTER', 'CROSS'];
+    private const SQLITE_JOIN_TYPES = ['INNER', 'LEFT', 'LEFT OUTER', 'CROSS'];
+    private const FIELD_SPEC_CHARS = ['+', '-', '*', '/', '%', '(', ')', '||'];
 	private const NO_FETCH = 0;
 	private const FETCH_ONE = 1;
 	private const FETCH_ALL = 2;
@@ -24,7 +26,9 @@ class QueryBuilder
 	private bool $printErrors = false;
 	private array $result = [];
 	private array $params = [];
+    private $fields = [];
 	private int $count = -1;
+    private bool $concat = false;
 
 	/**
 	 * @param PDO $pdo
@@ -156,10 +160,12 @@ class QueryBuilder
 	{
 		$this->sql = '';
 		$this->params = [];
+        $this->fields = [];
 		$this->query = null;
 		$this->result = [];
 		$this->count = -1;
 		$this->setError();
+        $this->concat = false;
 
 		return true;
 	}
@@ -215,7 +221,7 @@ class QueryBuilder
 
 	/**
 	 * @param string $column
-	 * @return $this|string|array
+	 * @return QueryBuilder|string|array
 	 */
 	public function column(string $column = 'id')
 	{
@@ -409,7 +415,7 @@ class QueryBuilder
 						$operator = strtoupper($cond[1]);
 						$value = $cond[2];
 
-						if (in_array($operator, self::OPERATORS)) {
+						if (in_array($operator, self::COND_OPERATORS)) {
 							if ($operator == 'IN' && is_array($value)) {
 								$values = rtrim(str_repeat("?,", count($value)), ',');
                 $sql .= "({$field} {$operator} ({$values}))";
@@ -444,6 +450,42 @@ class QueryBuilder
 		return $result;
 	}
 
+    /**
+     * @param string $str
+     * @return bool
+     */
+    private function searchForSpecChars(string $str): bool
+    {
+        foreach (self::FIELD_SPEC_CHARS as $char) {
+            if (mb_strpos($str, $char) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $table
+     * @return string
+     */
+    private function prepareTables($table): string
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return '';
+        }
+
+        if (is_string($table) && (mb_strpos(mb_strtolower($table), 'select') !== false)) {
+            $this->concat = true;
+            return "({$table})";
+        } elseif (is_string($table) && $this->searchForSpecChars($table)) {
+            return $table;
+        }
+
+        return $this->prepareAliases($table);
+    }
+
 	/**
 	 * @param string $field
 	 * @param string $sort
@@ -452,16 +494,16 @@ class QueryBuilder
 	private function prepareSorting(string $field = '', string $sort = ''): array
 	{
 		if (strpos($field, ' ') !== false) {
-			$splitted = explode(' ', $field);
-      $field = $splitted[0];
-      $sort = $splitted[1];
+            $splitted = explode(' ', $field);
+            $field = $splitted[0];
+            $sort = $splitted[1];
 		}
 
-    $field = $this->prepareField($field);
+        $field = $this->prepareField($field);
 
 		$sort =  ($sort == '') ? 'ASC' : strtoupper($sort);
 
-    return [$field, $sort];
+        return [$field, $sort];
 	}
 
 	/**
@@ -526,23 +568,29 @@ class QueryBuilder
 			return $this;
 		}
 
-		$this->reset();
+        $preparedTable = $this->prepareTables($table);
+        $preparedFields = $this->prepareAliases($fields);
 
-        $this->sql = "SELECT ";
-        $this->sql .= $dist ? "DISTINCT " : '';
+		if (!$this->concat) {
+            $this->reset();
+        }
 
-		if (is_array($fields) || is_string($fields)) {
-			$this->sql .= $this->prepareAliases($fields);
-		} else {
-			$this->setError('Incorrect type of $fields in ' . __METHOD__ . '. $fields must be a string or an array');
-			return $this;
-		}
+        $sql = "SELECT ";
+        $sql .= $dist ? "DISTINCT " : '';
 
-		if (is_array($table) || is_string($table)) {
-			$this->sql .= " FROM {$this->prepareAliases($table)}";
-		} else {
-			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
-		}
+        if (is_string($table) && $this->searchForSpecChars($table) && $fields == '*') {
+            $sql .= $preparedTable;
+            $this->fields = $this->prepareAliases($table);
+        } else {
+            $this->fields = $fields;
+            $sql .= "{$preparedFields} FROM {$preparedTable}";
+        }
+
+        if ($this->concat) {
+            $this->sql .= $sql;
+        } else {
+            $this->sql = $sql;
+        }
 
 		return $this;
 	}
@@ -608,9 +656,9 @@ class QueryBuilder
 			return $this;
 		}
 
-    if (is_string($field) && !empty($field) && is_string($value) && !empty($value)) {
-	    $this->where([[$field, 'LIKE', $value]]);
-    } else if (is_string($field) && empty($value)) {
+        if (is_string($field) && !empty($field) && !empty($value)) {
+            $this->where([[$field, 'LIKE', $value]]);
+        } else if (is_string($field) && empty($value)) {
 			$this->where($field);
 		} else if (is_array($field)) {
 			$this->where([[$field[0], 'LIKE', $field[1]]]);
@@ -646,7 +694,8 @@ class QueryBuilder
 	 * @param string $field
 	 * @return $this
 	 */
-	public function isNull(string $field) {
+	public function isNull(string $field): QueryBuilder
+    {
 		if (empty($field)) {
 			$this->setError('Empty $field in ' . __METHOD__);
 			return $this;
@@ -660,7 +709,8 @@ class QueryBuilder
 	 * @param string $field
 	 * @return $this
 	 */
-	public function isNotNull(string $field) {
+	public function isNotNull(string $field): QueryBuilder
+    {
 		if (empty($field)) {
 			$this->setError('Empty $field in ' . __METHOD__);
 			return $this;
@@ -674,7 +724,8 @@ class QueryBuilder
 	 * @param string $field
 	 * @return $this
 	 */
-	public function notNull(string $field) {
+	public function notNull(string $field): QueryBuilder
+    {
 		$this->isNotNull($field);
 		return $this;
 	}
@@ -685,7 +736,12 @@ class QueryBuilder
 	 */
 	public function limit(int $limit = 1): QueryBuilder
 	{
-		$this->sql .= " LIMIT {$limit}";
+        if (mb_strpos(mb_strtolower($this->sql), 'delete') !== false && $this->getDriver() == 'sqlite') {
+            return $this;
+        }
+
+        $this->sql .= " LIMIT {$limit}";
+
 		return $this;
 	}
 
@@ -762,8 +818,8 @@ class QueryBuilder
 			return $this;
 		}
 
-		if (is_array($table) or is_string($table)) {
-			$table = $this->prepareAliases($table);
+		if (is_array($table) || is_string($table)) {
+			$table = $this->prepareTables($table);
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
@@ -789,13 +845,14 @@ class QueryBuilder
 		}
 
 		if (is_array($table) || is_string($table)) {
-			$table = $this->prepareAliases($table);
+            $table = $this->prepareTables($table);
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
 		}
 
 		$this->reset();
+        $this->fields = $fields;
 
 		if (isset($fields[0]) && is_array($fields[0])) {
 			$names = array_shift($fields);
@@ -832,6 +889,8 @@ class QueryBuilder
 			return $this;
 		}
 
+        $this->fields = $fields;
+
 		if (is_array($table) or is_string($table)) {
 			$table = $this->prepareAliases($table);
 		} else {
@@ -863,18 +922,26 @@ class QueryBuilder
 	{
 		$join_type = strtoupper($join_type);
 
-		if (empty($join_type) || !in_array($join_type, self::JOIN_TYPES)) {
-			$this->setError('Empty $join_type or is not allowed in ' . __METHOD__);
-			return $this;
-		}
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
 
-		if (empty($table)) {
-			$this->setError('Empty $table in ' . __METHOD__);
-			return $this;
-		}
+        if (empty($join_type)) {
+            $this->setError('Empty $join_type in ' . __METHOD__);
+            return $this;
+        }
+
+		if ($this->getDriver() == 'sqlite' && !in_array($join_type, self::SQLITE_JOIN_TYPES)) {
+            $this->setError('$join_type is not allowed in SQLite in ' . __METHOD__);
+            return $this;
+        } else if (!in_array($join_type, self::JOIN_TYPES)) {
+            $this->setError('$join_type is not allowed in ' . __METHOD__);
+            return $this;
+        }
 
 		if (is_array($table) || is_string($table)) {
-			$this->sql .= " {$join_type} JOIN {$this->prepareAliases($table)}";
+			$this->sql .= " {$join_type} JOIN {$this->prepareTables($table)}";
 		} else {
 			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array.');
 			return $this;
@@ -891,10 +958,128 @@ class QueryBuilder
 			}
 		}
 
-		$this->setError();
-
 		return $this;
 	}
+
+    /**
+     * @param bool $unionAll
+     * @return $this
+     */
+    public function union(bool $unionAll = false): QueryBuilder
+    {
+        $this->concat = true;
+        $this->sql .= $unionAll ? ' UNION ALL ' : ' UNION ';
+        return $this;
+    }
+
+    /**
+     * @param string|array $table
+     * @param bool $unionAll
+     * @return $this
+     */
+    public function unionSelect($table, bool $unionAll = false): QueryBuilder
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
+
+        if (mb_strpos(mb_strtolower($this->sql), 'union') !== false) {
+            $this->setError('SQL has already UNION in ' . __METHOD__);
+            return $this;
+        }
+
+        $this->concat = true;
+        $fields = $this->fields ? : '*';
+        $this->sql .= $unionAll ? ' UNION ALL ' : ' UNION ';
+		$this->sql .= "SELECT {$this->prepareAliases($fields)}";
+
+		if (is_array($table) || is_string($table)) {
+			$this->sql .= " FROM {$this->prepareTables($table)}";
+		} else {
+			$this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
+		}
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function excepts(): QueryBuilder
+    {
+        $this->concat = true;
+        $this->sql .= ' EXCEPT ';
+        return $this;
+    }
+
+    /**
+     * @param $table
+     * @return $this
+     */
+    public function exceptSelect($table): QueryBuilder
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
+
+        if (mb_strpos(mb_strtolower($this->sql), 'except') !== false) {
+            $this->setError('SQL has already EXCEPT in ' . __METHOD__);
+            return $this;
+        }
+
+        $this->concat = true;
+        $fields = $this->fields ? : '*';
+        $this->sql .= " EXCEPT SELECT {$this->prepareAliases($fields)}";
+
+        if (is_array($table) || is_string($table)) {
+            $this->sql .= " FROM {$this->prepareTables($table)}";
+        } else {
+            $this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function intersect(): QueryBuilder
+    {
+        $this->concat = true;
+        $this->sql .= ' INTERSECT ';
+        return $this;
+    }
+
+    /**
+     * @param $table
+     * @return $this
+     */
+    public function intersectSelect($table): QueryBuilder
+    {
+        if (empty($table)) {
+            $this->setError('Empty $table in ' . __METHOD__);
+            return $this;
+        }
+
+        if (mb_strpos(mb_strtolower($this->sql), 'intersect') !== false) {
+            $this->setError('SQL has already INTERSECT in ' . __METHOD__);
+            return $this;
+        }
+
+        $this->concat = true;
+        $fields = $this->fields ? : '*';
+        $this->sql .= " INTERSECT SELECT {$this->prepareAliases($fields)}";
+
+        if (is_array($table) || is_string($table)) {
+            $this->sql .= " FROM {$this->prepareTables($table)}";
+        } else {
+            $this->setError('Incorrect type of $table in ' . __METHOD__ . '. $table must be a string or an array');
+        }
+
+        return $this;
+    }
 
     /**
      * @return string
@@ -904,7 +1089,12 @@ class QueryBuilder
         return $this->getSql();
     }
 
-    public function createView(string $viewName, bool $addExists = true)
+    /**
+     * @param string $viewName
+     * @param bool $addExists
+     * @return $this
+     */
+    public function createView(string $viewName, bool $addExists = true): QueryBuilder
     {
         // this method will be moved to another class
         if (empty($viewName)) {
@@ -924,7 +1114,12 @@ class QueryBuilder
         return $this;
     }
 
-    public function dropView(string $viewName, bool $addExists = true)
+    /**
+     * @param string $viewName
+     * @param bool $addExists
+     * @return $this
+     */
+    public function dropView(string $viewName, bool $addExists = true): QueryBuilder
     {
         // this method will be moved to another class
         if (empty($viewName)) {
@@ -942,17 +1137,17 @@ class QueryBuilder
 
 	/**
 	 * @param string $table
-	 * @param bool $add_exists
+	 * @param bool $addExists
 	 * @return $this
 	 */
-	public function drop(string $table, bool $add_exists = true): QueryBuilder
+	public function drop(string $table, bool $addExists = true): QueryBuilder
 	{
 		if (empty($table)) {
 			$this->setError('Empty $table in ' . __METHOD__);
 			return $this;
 		}
 
-		$exists = ($add_exists) ? 'IF EXISTS ' : '';
+		$exists = ($addExists) ? 'IF EXISTS ' : '';
 
 		$this->reset();
 		$this->sql = "DROP TABLE {$exists}`{$table}`";
@@ -976,4 +1171,9 @@ class QueryBuilder
 
 		return $this;
 	}
+
+    public function getDriver(): string
+    {
+        return strtolower($this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
+    }
 }
