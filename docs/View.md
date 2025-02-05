@@ -17,7 +17,7 @@ One more example
 $query->select('users')
     ->isNull('email')
     ->createView('users_no_email')
-    ->go()
+    ->go();
 ```
 Result query
 ```sql
@@ -45,7 +45,7 @@ DROP VIEW IF EXISTS `users_no_email`;
 ```
 - Without `IF EXISTS`
 ```php
-$query->dropView('users_no_email', false)->go()
+$query->dropView('users_no_email', false)->go();
 ```
 Result query
 ```sql

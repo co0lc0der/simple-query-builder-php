@@ -79,12 +79,12 @@ ORDER BY `cp`.`cab_id` ASC, `cp`.`printer_id` DESC;
 ```
 ### `LEFT [OUTER] JOIN`
 ```php
-# LEFT JOIN
+// LEFT JOIN
 $results = $query->select('employees', ['employees.employee_id', 'employees.last_name', 'positions.title'])
             ->join('positions', ['employees.position_id', 'positions.position_id'], "left")
             ->all();
 
-# or LEFT OUTER JOIN
+// or LEFT OUTER JOIN
 $results = $query->select('employees', ['employees.employee_id', 'employees.last_name', 'positions.title'])
             ->join('positions', ['employees.position_id', 'positions.position_id'], "left outer")
             ->all();
@@ -158,7 +158,7 @@ $results = $query->select('clients', ['name', 'age'])
         ->select('employees', ['name', 'age'])
         ->all();
 
-# or
+// or
 $results = $query->select('clients', ['name', 'age'])
         ->unionSelect('employees')
         ->all();
@@ -176,9 +176,22 @@ $results = $query->select('clients', ['name', 'age'])
         ->select('employees', ['name', 'age'])
         ->all();
 
-# or
+// or
 $results = $query->select('clients', ['name', 'age'])
         ->unionSelect('employees', true)
+        ->all();
+```
+or since [v0.4.1](https://github.com/co0lc0der/simple-query-builder-php/releases/tag/v0.4.1)
+```php
+$results = $query->select('clients', ['name', 'age'])
+        ->unionAll()
+        ->select('employees', ['name', 'age'])
+        ->all();
+
+
+// or
+$results = $query->select('clients', ['name', 'age'])
+        ->unionSelectAll('employees')
         ->all();
 ```
 Result query

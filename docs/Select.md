@@ -70,7 +70,7 @@ SELECT * FROM `users` WHERE (`id` > 1) AND (`group_id` = 2);
 ```php
 $results = $query->select('users')->like(['name', '%John%'])->all();
 
-# or with WHERE
+// or with WHERE
 $results = $query->select('users')->where([['name', 'LIKE', '%John%']])->all();
 ```
 or it's able to use two strings (instead of an array) in parameters since [v0.3.5](https://github.com/co0lc0der/simple-query-builder-php/releases/tag/v0.3.5)
@@ -84,7 +84,7 @@ SELECT * FROM `users` WHERE (`name` LIKE '%John%');
 ```php
 $results = $query->select('users')->notLike(['name', '%John%'])->all();
 
-# or with WHERE
+// or with WHERE
 $results = $query->select('users')->where([['name', 'NOT LIKE', '%John%']])->all();
 ```
 or it's able to use two strings (instead of an array) in parameters since [v0.3.5](https://github.com/co0lc0der/simple-query-builder-php/releases/tag/v0.3.5)
@@ -100,7 +100,7 @@ since [v0.3.5](https://github.com/co0lc0der/simple-query-builder-php/releases/ta
 ```php
 $results = $query->select('users')->isNull('phone')->all();
 
-# or with WHERE
+// or with WHERE
 $results = $query->select('users')->where([['phone', 'is null']])->all();
 ```
 Result query
@@ -110,10 +110,10 @@ SELECT * FROM `users` WHERE (`phone` IS NULL);
 ```php
 $results = $query->select('customers')->isNotNull('address')->all();
 
-# or
+// or
 $results = $query->select('customers')->notNull('address')->all();
 
-# or with WHERE
+// or with WHERE
 $results = $query->select('customers')->where([['address', 'is not null']])->all();
 ```
 Result query
@@ -145,7 +145,7 @@ SELECT * FROM `posts` WHERE (`user_id` = 3) OFFSET 14 LIMIT 7;
 ```php
 $results = $query->select('users', ['counter' => 'COUNT(*)'])->one();
 
-# or 
+// or 
 $results = $query->count('users');
 ```
 Result query
@@ -174,7 +174,13 @@ ORDER BY `b`.`id` DESC;
 ```
 #### `DISTINCT`
 ```php
-$results = $query->select('customers', ['city', 'country'], true)->orderBy('country desc')->all();
+$results = $query->select('customers', ['city', 'country'], true)
+        ->orderBy('country desc')->all();
+```
+or since [v0.4.1](https://github.com/co0lc0der/simple-query-builder-php/releases/tag/v0.4.1)
+```php
+$results = $query->selectDistinct('customers', ['city', 'country'])
+        ->orderBy('country desc')->all();
 ```
 Result query
 ```sql
